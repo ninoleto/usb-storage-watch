@@ -1,0 +1,8 @@
+#!/bin/sh
+set -eu
+[ -z "${DPKG_ROOT:-}" ] || exit 0
+if [ "$1" = configure ]; then
+    install -d -m 0700 /etc/usb-storage-watch /var/lib/usb-storage-watch
+    /usr/bin/python3 -I /usr/lib/usb-storage-watch/maintenance.py finish-upgrade
+    /usr/bin/python3 -I /usr/lib/usb-storage-watch/web_install.py finish-upgrade
+fi

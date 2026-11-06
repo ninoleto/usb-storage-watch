@@ -1,0 +1,37 @@
+[Unit]
+Description=USB Storage Watch optional authenticated LAN dashboard (HTTP or HTTPS)
+Requires=usb-storage-watch-broker.service
+After=usb-storage-watch-broker.service network.target
+
+[Service]
+Type=simple
+User=usb-storage-watch-web
+Group=usb-storage-watch-web
+ExecStart=/usr/bin/python3 -I /usr/lib/usb-storage-watch/web.py --lan
+WorkingDirectory=/
+# The broker supervises address availability and bounded retries.
+Restart=no
+SuccessExitStatus=0
+RestartSec=5
+TimeoutStopSec=15
+UMask=0077
+LimitCORE=0
+NoNewPrivileges=yes
+CapabilityBoundingSet=
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectSystem=strict
+ProtectHome=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictSUIDSGID=yes
+RestrictRealtime=yes
+RestrictNamespaces=yes
+LockPersonality=yes
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6 AF_NETLINK
+SystemCallArchitectures=native
+InaccessiblePaths=-/etc/usb-storage-watch -/var/lib/usb-storage-watch -/run/docker.sock
+
+[Install]
+WantedBy=multi-user.target

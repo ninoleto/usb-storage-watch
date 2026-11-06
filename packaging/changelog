@@ -1,0 +1,511 @@
+usb-storage-watch (2.0.1~beta1) unstable; urgency=high
+
+  * Beta preparation from UI40; runtime logic unchanged. Use synthetic examples
+    and current validation/release guidance for the publication export.
+
+ -- USB Storage Watch maintainers <maintainers@example.invalid>  Fri, 06 Nov 2026 12:00:00 +0100
+
+usb-storage-watch (2.0.0~ui40) unstable; urgency=high
+
+  * Quiesce the LAN supervisor before listener shutdown and verify all web
+    processes/workers stopped. Embed repeatable failed-upgrade preparation
+    in prerm so correction is available before payload unpack.
+  * Preserve restart intent and LAN enablement; document existing-image setup.
+
+ -- USB Storage Watch contributors <maintainer@example.invalid>  Fri, 06 Nov 2026 12:00:00 +0100
+
+usb-storage-watch (2.0.0~ui39) unstable; urgency=high
+
+  * Verify saved physical/image prerequisites before manual app Start/Restart.
+  * Reuse storage/app locks; refuse absent or unverifiable storage without writes.
+  * Preserve Stop, monitoring independence, manual holds and Companion 0.2.6.
+
+ -- USB Storage Watch maintainers <maintainers@example.invalid>  Thu, 05 Nov 2026 19:30:00 +0100
+
+usb-storage-watch (2.0.0~ui38) unstable; urgency=medium
+
+  * Keep integration setup concise with focused links to existing settings.
+  * Collapse public PEM text without changing certificate copying or trust.
+  * Preserve unchanged Companion 0.2.6 and same-origin package downloads.
+
+ -- USB Storage Watch maintainers <maintainers@example.invalid>  Thu, 05 Nov 2026 08:30:00 +0100
+
+usb-storage-watch (2.0.0~ui37) unstable; urgency=medium
+
+  * Simplify Companion setup around active URL, management token and public CA.
+  * Bundle unchanged Companion 0.2.6; retire unused scoped bearer APIs.
+  * Preserve dashboard authentication and guarded storage/app operations.
+
+ -- USB Storage Watch maintainers <maintainers@example.invalid>  Thu, 05 Nov 2026 08:00:00 +0100
+
+usb-storage-watch (2.0.0~ui36) unstable; urgency=medium
+
+  * Present completed history in actual outcome order; keep outage time separate.
+  * Preserve original event evidence and show saved app settings in headers.
+
+ -- USB Storage Watch maintainers <maintainers@example.invalid>  Wed, 04 Nov 2026 01:30:00 +0100
+
+usb-storage-watch (2.0.0~ui35) unstable; urgency=medium
+
+  * Persist per-drive no-return deadlines and queue one timeout outcome.
+  * Retain safe later recovery, pinned app protection and existing action budgets.
+  * Show backend remaining time and separately timestamped timeout history.
+
+ -- USB Storage Watch maintainers <maintainers@example.invalid>  Wed, 04 Nov 2026 01:00:00 +0100
+
+usb-storage-watch (2.0.0~ui34) unstable; urgency=medium
+
+  * Explain deliberate app stops only after verified storage readiness.
+  * Link to Docker Apps without changing monitoring or automatic startup.
+
+ -- USB Storage Watch maintainers <maintainers@example.invalid>  Tue, 03 Nov 2026 23:58:21 +0100
+
+usb-storage-watch (2.0.0~ui33) unstable; urgency=medium
+
+  * Fix repeated safe unmount admission recognizing its own operation lock.
+  * Keep deliberate-stop receipts and live competing-worker restrictions intact.
+  * Require a fresh review after failed one-use unmount confirmation.
+
+ -- USB Storage Watch maintainers <maintainers@example.invalid>  Tue, 03 Nov 2026 23:30:00 +0100
+
+usb-storage-watch (2.0.0~ui32) unstable; urgency=medium
+
+  * Review and verify dependent app stops before guarded safe unmount.
+  * Preserve deliberate stops across competing startup/recovery operations.
+  * Add white borders/arrows to enabled blue dropdown fields.
+
+ -- USB Storage Watch maintainers <maintainers@example.invalid>  Tue, 03 Nov 2026 21:00:00 +0100
+
+usb-storage-watch (2.0.0~ui31) unstable; urgency=medium
+
+  * Complete affected-app control locks and show readable amber recovery notices.
+  * Guard legacy editors when adding an identity affected by another drive incident.
+  * Use Docker-header blue for dropdown fields, preserving touch/keyboard behavior.
+  * Document a future default-off reboot proposal without implementing it.
+
+ -- USB Storage Watch maintainers <maintainers@example.invalid>  Tue, 03 Nov 2026 20:00:00 +0100
+
+usb-storage-watch (2.0.0~ui30) unstable; urgency=medium
+
+  * Guard affected app controls/settings throughout storage recovery incidents.
+  * Nest HDD standby controls while retaining independent validation and saving.
+  * Retain sanitized boot email failure diagnostics without changing retries.
+
+ -- USB Storage Watch maintainers <maintainers@example.invalid>  Tue, 03 Nov 2026 19:00:00 +0100
+
+usb-storage-watch (2.0.0~ui29) unstable; urgency=medium
+
+  * Add darker, independently collapsible image selectors with selected summaries.
+  * Separate unavailable identities and require explicit reviewed reconnect/removal.
+  * Require successful Docker inventory before declaring an identity missing.
+
+ -- USB Storage Watch maintainers <maintainers@example.invalid>  Tue, 03 Nov 2026 03:00:00 +0100
+
+usb-storage-watch (2.0.0~ui28) unstable; urgency=medium
+
+  * Separate app computer-startup and drive-recovery panels with retained choices.
+  * Review settings and Docker/Compose policy together before explicit saving.
+  * Show drive readiness warnings and accurate partial-save outcomes.
+
+ -- USB Storage Watch maintainers <maintainers@example.invalid>  Tue, 03 Nov 2026 02:30:00 +0100
+
+usb-storage-watch (2.0.0~ui27) unstable; urgency=medium
+
+  * Follow eligible physical addresses after explicit Automatic-mode confirmation.
+  * Hide unavailable/unverified URLs and supervise a single LAN listener.
+  * Preserve HTTPS trust where possible and require explicit trust replacement.
+
+ -- USB Storage Watch maintainers <maintainers@example.invalid>  Tue, 03 Nov 2026 01:00:00 +0100
+
+usb-storage-watch (2.0.0~ui26) unstable; urgency=medium
+
+  * Add confirmed Docker restart-policy setup with private original-policy records.
+  * Preview and validate selected-service Compose edits with overrides and rollback.
+  * Clarify boot wording and optional ordinary-folder storage prerequisites.
+
+ -- USB Storage Watch maintainers <maintainers@example.invalid>  Tue, 03 Nov 2026 01:00:00 +0100
+
+usb-storage-watch (2.0.0~ui25) unstable; urgency=medium
+
+  * Guard unmounted manual USB resets and verify companion-port returns.
+  * Add independent opt-in container boot startup with selected storage.
+  * Show live USB identity and preserve manual/recovery workflow separation.
+
+ -- USB Storage Watch maintainers <maintainers@example.invalid>  Mon, 02 Nov 2026 20:00:00 +0100
+
+usb-storage-watch (2.0.0~ui24) unstable; urgency=medium
+
+  * Isolate settled cleanup records between separate outage incidents.
+  * Handle repeated mount/device identifiers without replaying uncertain writes.
+  * Resume eligible UI23 no-action failures after fresh verification.
+
+ -- USB Storage Watch maintainers <maintainers@example.invalid>  Mon, 02 Nov 2026 07:30:00 +0000
+
+usb-storage-watch (2.0.0~ui23) unstable; urgency=medium
+
+  * Correct namespace refusal before normal failed-mount cleanup.
+  * Resume the settled UI22 no-action namespace failure after fresh checks.
+
+ -- USB Storage Watch maintainers <maintainers@example.invalid>  Mon, 02 Nov 2026 07:00:00 +0000
+
+usb-storage-watch (2.0.0~ui22) unstable; urgency=medium
+
+  * Automatically release failed configured mounts after verified container stop.
+  * Resume eligible old blocked incidents without a manual unmount prerequisite.
+
+ -- USB Storage Watch maintainers <maintainers@example.invalid>  Mon, 02 Nov 2026 06:30:00 +0000
+
+usb-storage-watch (2.0.0~ui21) unstable; urgency=medium
+
+  * Resume settled legacy failed incidents with the stop/wait/recover/start lifecycle.
+  * Explain missing historical mount identity and the one-time manual release.
+
+ -- USB Storage Watch maintainers <maintainers@example.invalid>  Mon, 02 Nov 2026 06:00:00 +0000
+
+usb-storage-watch (2.0.0~ui20) UNRELEASED; urgency=medium
+
+  * Stop selected containers on detected disk failure and start after recovery.
+  * Wait for disk return and recover owned detached main/image mount trees.
+  * Improve Docker refusal reporting and USB descriptor inspection.
+  * Use 24-hour time, requested button/header colours and one local result.
+
+ -- USB Storage Watch contributors <noreply@example.invalid>  Mon, 02 Nov 2026 12:00:00 +0100
+
+usb-storage-watch (2.0.0~ui19) UNRELEASED; urgency=medium
+
+  * Recover a verified detached shutdown mount before normal drive recovery.
+  * Show mount conflicts accurately and keep long action errors readable.
+  * Preserve manual Docker controls and earlier image/network UI corrections.
+
+ -- USB Storage Watch contributors <noreply@example.invalid>  Mon, 02 Nov 2026 05:00:00 +0000
+
+usb-storage-watch (2.0.0~ui18) UNRELEASED; urgency=medium
+
+  * TEST ONLY: add manual Docker container Start, Stop and Restart controls.
+  * Keep manual controls independent of monitoring and restart settings.
+  * Verify container identity and runtime outcome; never replay lost requests.
+  * Retain all UI17 image-operation, local-feedback and layout fixes.
+
+ -- USB Storage Watch contributors <noreply@example.invalid>  Mon, 02 Nov 2026 00:00:00 +0000
+
+usb-storage-watch (2.0.0~ui17) UNRELEASED; urgency=medium
+
+  * TEST ONLY: correct nested configuration locks during manual image actions.
+  * Show operation progress and outcomes beneath the relevant controls.
+  * Report partially completed image creation without repeating creation.
+  * Separate image removal and explain detected Docker storage dependencies.
+
+ -- USB Storage Watch contributors <noreply@example.invalid>  Mon, 02 Nov 2026 00:00:00 +0000
+
+usb-storage-watch (2.0.0~ui16) UNRELEASED; urgency=medium
+
+  * TEST ONLY: container-first collapsible Docker restart settings.
+  * User-selected drives and images; monitoring-independent configuration.
+  * Storage detection advises, image failure does not block selected restart.
+
+ -- USB Storage Watch contributors <noreply@example.invalid>  Mon, 02 Nov 2026 00:00:00 +0000
+
+usb-storage-watch (2.0.0~ui15) UNRELEASED; urgency=medium
+
+  * TEST ONLY: clarify Docker restart settings and required storage.
+  * Audit restart outcomes, stale display state and save validation.
+  * Separate drive removal from ordinary controls.
+
+ -- USB Storage Watch contributors <maintainers@example.invalid>  Mon, 02 Nov 2026 00:30:00 +0100
+
+usb-storage-watch (2.0.0~ui14) UNRELEASED; urgency=medium
+
+  * Add confirmed removal of managed drives, including disconnected devices.
+  * Retire only the selected profile after monitor and cleanup verification.
+  * Preserve files, mounts, private history, shared settings and other drives.
+  * Reconcile overview cards and prevent stale requests or lists restoring them.
+
+ -- USB Storage Watch maintainers <maintainers@example.invalid>  Sun, 01 Nov 2026 22:00:00 +0100
+
+usb-storage-watch (2.0.0~ui13) UNRELEASED; urgency=medium
+
+  * Fix HTTPS Apply eligibility and show validation errors beside the action.
+  * Match RF433 Button Manager test.5 network layout and certificate walkthrough.
+  * Replace all selectors with large, scrollable modal touch pickers.
+  * Hide native number spinners and add full-width network port reset controls.
+  * Renew server certificates with the existing issuer and rollback on failure.
+
+ -- USB Storage Watch maintainers <maintainers@example.invalid>  Sun, 01 Nov 2026 19:30:00 +0100
+
+usb-storage-watch (2.0.0~ui12) UNRELEASED; urgency=medium
+
+  * TEST ONLY: match RF Button Manager network controls and connection handoff.
+  * Keep old listeners until proposed-origin confirmation; retain on timeout.
+  * Persist a private certificate issuer and follow confirmed local port changes.
+  * Verify each container's required bind storage independently of other images.
+  * Retain lifecycle budgets, container identity and stopped-state safeguards.
+
+ -- USB Storage Watch contributors <maintainers@example.invalid>  Sun, 01 Nov 2026 18:00:00 +0000
+
+usb-storage-watch (2.0.0~ui11) UNRELEASED; urgency=medium
+
+  * TEST ONLY: expose per-drive Docker recovery configuration and live status.
+  * Add a bounded read-only storage-access check and preserve offline choices.
+  * Require verified image mounts for Docker source discovery.
+  * Track saved timing/standby values and retain independent unsaved edits.
+  * Add clear messages, inline refresh feedback and mounted location guards.
+  * Give Start monitoring a stronger border; preserve UI10 FIX1 behavior.
+
+ -- USB Storage Watch contributors <maintainers@example.invalid>  Sun, 01 Nov 2026 06:00:00 +0000
+
+usb-storage-watch (2.0.0~ui10+fix1) UNRELEASED; urgency=medium
+
+  * TEST ONLY: treat the formatter's ready phase as completed.
+  * Replace the working spinner with a green success or red failure result.
+  * Cover terminal progress responses and route reload at four browser widths.
+
+ -- USB Storage Watch contributors <maintainers@example.invalid>  Sun, 01 Nov 2026 02:36:00 +0000
+
+usb-storage-watch (2.0.0~ui10) UNRELEASED; urgency=medium
+
+  * TEST ONLY: reserve notification space and retain readable message history.
+  * Coalesce rapid image recovery preference changes without blocking taps.
+  * Verify LAN changes and handle interrupted remote connections explicitly.
+  * Preserve mount/monitoring state on reconnect preflight refusals.
+  * Restore worker descriptor ownership on every manual-operation exit.
+  * Add occupied-peer diagnostics; retain isolation and recovery safeguards.
+  * Correct standby labels, add-button color, spacing and preparation progress.
+
+ -- USB Storage Watch contributors <maintainers@example.invalid>  Sun, 01 Nov 2026 04:00:00 +0100
+
+usb-storage-watch (2.0.0~ui9) UNRELEASED; urgency=medium
+
+  * TEST ONLY: close history databases and isolate background observation.
+  * Bound administration request concurrency and busy-drive lock waits.
+  * Preserve image recovery preferences across manual mount/unmount actions.
+  * Add live HDD status, touch dropdowns and stable, stacked standby controls.
+  * Fix event refresh, recovery colors and immediate Companion token state.
+  * Preserve UI8 sleep behavior and existing drive recovery safeguards.
+
+ -- USB Storage Watch contributors <maintainers@example.invalid>  Sun, 01 Nov 2026 03:00:00 +0100
+
+usb-storage-watch (2.0.0~ui8) UNRELEASED; urgency=medium
+
+  * TEST ONLY: leave monitoring and startup enablement untouched during manual sleep.
+  * Share only the storage-operation lock so passive monitoring can keep running.
+  * Flush pending writes before a bounded quiet check for explicit standby requests.
+  * Preserve truthful failure results, identity guards and bridge verification.
+
+ -- USB Storage Watch contributors <maintainers@example.invalid>  Sun, 01 Nov 2026 00:55:00 +0100
+
+usb-storage-watch (2.0.0~ui7) UNRELEASED; urgency=medium
+
+  * TEST ONLY: correct failed-operation feedback and retain the last drive result.
+  * Identify USB reconnect as software-only; never claim verified power removal.
+  * Separate bounded process inspection from USB-write timeout and retain cleanup.
+  * Wrap recent-event controls on small screens; preserve UI6 storage safeguards.
+
+ -- USB Storage Watch contributors <maintainers@example.invalid>  Sun, 01 Nov 2026 00:20:00 +0100
+
+usb-storage-watch (2.0.0~ui6) UNRELEASED; urgency=medium
+
+  * TEST ONLY: verify ATA-pass-through USB-SATA devices from kernel USB ancestry.
+  * Accept verified serial-bearing USB HDDs when ID_BUS advertises the ATA disk.
+  * Allow safe disk preparation through ata-/wwn-/scsi- by-id links on verified USB disks.
+  * Keep whole-disk, busy-storage, identity, formatting and USB reset safeguards.
+  * Improve passive HDD classification with ATA rotational metadata where available.
+  * Keep NTFS filesystems intact unless the user explicitly confirms ext4 formatting.
+
+ -- USB Storage Watch contributors <maintainers@example.invalid>  Sat, 31 Oct 2026 22:30:00 +0100
+
+usb-storage-watch (2.0.0~ui5) UNRELEASED; urgency=medium
+
+  * TEST ONLY: apply HTTP/HTTPS network security without manually toggling LAN off and on.
+  * Add event refresh buttons and live read-only event updates without losing UI state.
+  * Add per-virtual-image Mount on recovery settings, keeping current mount independent.
+  * Preserve HDD standby, certificate download, token rotation, multi-drive and USB safeguards.
+  * Keep UI4 configurations and app data intact; physical validation remains outstanding.
+
+ -- USB Storage Watch contributors <maintainers@example.invalid>  Sat, 31 Oct 2026 19:30:00 +0100
+
+usb-storage-watch (2.0.0~ui4) UNRELEASED; urgency=medium
+
+  * TEST ONLY: lock confirmation buttons during running storage commands and display progress.
+  * Record manual storage actions in bounded per-drive event history.
+  * Restore authenticated public HTTPS trust-certificate download and browser help.
+  * Expose existing guarded HDD standby settings, manual sleep and management-token rotation.
+  * Support deliberate image mount/unmount with monitoring on or off, retaining explicit noauto intent.
+  * Preserve all monitored drive profiles, virtual images and the original recovery engine.
+
+ -- USB Storage Watch contributors <maintainers@example.invalid>  Sat, 31 Oct 2026 18:00:00 +0100
+
+usb-storage-watch (2.0.0~ui4) UNRELEASED; urgency=medium
+
+  * TEST ONLY: create and import Virtual Disk Images whether the selected drive's monitor is running or stopped.
+  * Briefly pause and resume only the selected active monitor under existing guarded locks, retaining service enablement.
+  * Preserve all images, dependencies, shared recovery safeguards and the approved GUI.
+
+ -- USB Storage Watch contributors <maintainers@example.invalid>  Sat, 31 Oct 2026 07:00:00 +0100
+
+usb-storage-watch (2.0.0~ui2) UNRELEASED; urgency=medium
+
+  * TEST ONLY: guarded in-app reassociation of previously configured reformatted USB disks.
+  * Correct refresh, image selection and reviewed mount-location API calls.
+  * Preserve existing recovery, safety checks and independent multi-drive profiles.
+
+ -- USB Storage Watch contributors <maintainers@example.invalid>  Sat, 31 Oct 2026 06:00:00 +0100
+
+usb-storage-watch (2.0.0~ui2) UNRELEASED; urgency=medium
+
+  * TEST ONLY: allow authenticated read-only Virtual Disk Image discovery in privileged broker.
+  * Scan .img files only on explicit user action with the USB drive mounted.
+  * Verify two-drive isolation, authorization and every frontend API route.
+  * Preserve UI1 layout, all credentials, independent drive settings and existing recovery protections.
+
+ -- USB Storage Watch contributors <maintainers@example.invalid>  Sat, 31 Oct 2026 05:00:00 +0100
+
+usb-storage-watch (2.0.0~ui1) UNRELEASED; urgency=medium
+
+  * TEST ONLY: integrate the approved standalone dark interface with the existing DEV9 backend.
+  * Keep per-drive monitoring, recovery, notification and mount actions distinct from global pages.
+  * Add bounded read-only discovery of unregistered .img files on the monitored USB drive.
+  * Require explicit confirmation for image writes, USB reconnect, mount changes and formatting.
+  * Preserve existing configuration, history, tokens, services and backend safety guards.
+  * Remote image upload and Docker dependency editing remain deferred pending physical validation.
+
+ -- USB Storage Watch contributors <maintainers@example.invalid>  Sat, 31 Oct 2026 04:30:00 +0100
+
+usb-storage-watch (2.0.0~dev9) UNRELEASED; urgency=medium
+
+  * TEST ONLY: coherent global and per-drive management workflows.
+  * Target preparation by verified physical identity; retain destructive guards.
+  * Separate monitoring and recovery; combine history with explicit filtering.
+  * Preserve configurations, data, credentials, listeners and recovery engines.
+
+ -- USB Storage Watch contributors <maintainers@example.invalid>  Sat, 31 Oct 2026 03:00:00 +0100
+
+usb-storage-watch (2.0.0~dev8) UNRELEASED; urgency=medium
+
+  * TEST ONLY: independently monitor and manage multiple USB drives.
+  * Preserve legacy configuration, authentication, SMTP and recovery history.
+  * Isolate services, workers, locks, standby, images and application recovery.
+  * Coordinate shared ports and mounts; reject ambiguous disk identities.
+
+ -- USB Storage Watch contributors <maintainers@example.invalid>  Sat, 31 Oct 2026 01:00:00 +0100
+
+usb-storage-watch (2.0.0~dev7) UNRELEASED; urgency=medium
+
+  * TEST ONLY: preserve nested forms, drafts and focus during status polling.
+  * Root-only retrievable token with controlled DEV6 credential transition.
+  * Separate Email account and notification settings; clear save/test actions.
+  * Preserve recovery, listeners, images, SMTP and Companion configuration.
+
+ -- USB Storage Watch contributors <maintainers@example.invalid>  Fri, 30 Oct 2026 21:00:00 +0100
+
+usb-storage-watch (2.0.0~dev6) UNRELEASED; urgency=medium
+
+  * TEST ONLY: stable live details, action colors, image tabs and HDD capabilities.
+  * Consistent management-token login; local-only bootstrap and complete rotation.
+  * Scoped Companion v1 API with passive status and existing guarded controls.
+  * Preserve DEV5 recovery, images, SMTP, listeners and upgrade configuration.
+
+ -- USB Storage Watch contributors <maintainers@example.invalid>  Fri, 30 Oct 2026 20:00:00 +0100
+
+usb-storage-watch (2.0.0~dev5) UNRELEASED; urgency=medium
+
+  * TEST ONLY: verify USB port enable and returned disk independently.
+  * Preserve durable write intent and bound cleanup of timed-out USB workers.
+  * Correct virtual image status and non-root access under broker restrictions.
+  * Explicit image access choices preserve existing files and ownership.
+  * Dedicated management token; one LAN switch with HTTP warning or verified TLS.
+  * Neutral dark interface and compact touch controls; preserve localhost access.
+
+ -- USB Storage Watch contributors <maintainers@example.invalid>  Fri, 30 Oct 2026 00:00:00 +0000
+
+usb-storage-watch (2.0.0~dev4) UNRELEASED; urgency=medium
+
+  * TEST ONLY: independent local HTTP and optional LAN HTTPS listeners.
+  * Verified LAN changes and rollback leave localhost access available.
+  * Accessible Limited Storage Spaces and explicit folder access corrections.
+  * Formatting progress, accurate live status, mobile drawer and appearance.
+  * Touch-friendly timing controls with tested defaults; preserve Email settings.
+
+ -- USB Storage Watch contributors <maintainers@example.invalid>  Fri, 30 Oct 2026 00:00:00 +0000
+
+usb-storage-watch (2.0.0~dev3) UNRELEASED; urgency=medium
+
+  * TEST ONLY: unified drive controls and dedicated settings pages.
+  * Preserve verified software reconnect despite hub power readback limitations.
+  * Restore multiple application images before configured Docker applications.
+  * Guided image setup and selected-drive preparation.
+  * Simplified authenticated local HTTPS access.
+
+ -- USB Storage Watch contributors <maintainers@example.invalid>  Fri, 30 Oct 2026 00:00:00 +0000
+
+usb-storage-watch (2.0.0~dev2) UNRELEASED; urgency=medium
+
+  * TEST ONLY: automatic direct USB port discovery and safe rebinding.
+  * Correct fuser invocation; distinguish passive HDD activity from standby.
+  * Simplify monitoring, email, mount location and hardware status screens.
+  * Retain recovery budgets, notifications, Docker, formatting and Companion.
+
+ -- USB Storage Watch contributors <maintainers@example.invalid>  Fri, 30 Oct 2026 00:00:00 +0000
+
+usb-storage-watch (2.0.0~dev1) UNRELEASED; urgency=medium
+
+  * One bounded recovery sequence; authenticated manual controls and HDD standby.
+  * Preserve existing mount, SMTP, Docker, USB safety and authentication modules.
+  * Require GUI and standby dependencies; add desktop launcher.
+  * Development prototype: hardware acceptance and additional OS testing pending.
+
+ -- Development prototype <maintainers@example.invalid>  Thu, 29 Oct 2026 18:00:00 +0100
+
+usb-storage-watch (1.1.1~rc3) unstable; urgency=medium
+
+  * Replace basic setup with drive selection, automatic recovery, optional email
+    and a single activation action. Move expert controls to Advanced.
+  * Reuse valid connection settings and preserve active desktop mounts.
+  * Support guarded desktop directories on host /run tmpfs; preserve all device,
+    namespace, filesystem and USB checks.
+  * Test simple GUI setup, upgrades, consent, rollback and directory security.
+  * Candidate for local physical acceptance; not release-ready.
+
+ -- USB Storage Watch contributors <maintainers@example.invalid>  Thu, 29 Oct 2026 12:00:00 +0000
+
+usb-storage-watch (1.1.1~rc2) unstable; urgency=medium
+
+  * Accept valid existing UUID entries and offer consented stable-path
+    migration.
+  * Keep private backups and durable resume/rollback without automatic unmounts.
+  * Preserve recovery state, retry budgets, queued notifications and Docker
+    paths.
+  * Diagnose USB2/USB3 peers accurately; retain unqualified-reset restrictions.
+  * Add migration, rollback, peer topology and browser regression tests.
+
+ -- USB Storage Watch contributors <maintainers@example.invalid>  Thu, 29 Oct 2026 04:00:00 +0000
+
+usb-storage-watch (1.1.1~rc1) unstable; urgency=medium
+
+  * Fix setup preflight, explicit mount consent and safe desktop mount
+    transition.
+  * Detect virtualization and explain independent USB hardware qualification.
+  * Show monitoring state accurately and avoid Docker discovery when disabled.
+  * Add clean-configuration browser and mount-preservation regression tests.
+  * Candidate for a fresh Ubuntu Studio installation test; not release-ready.
+
+ -- USB Storage Watch contributors <maintainers@example.invalid>  Thu, 29 Oct 2026 02:00:00 +0000
+
+usb-storage-watch (1.1.0) unstable; urgency=medium
+
+  * Add an authenticated localhost dashboard and beginner setup wizard.
+  * Separate unprivileged web access from a narrow authenticated root broker.
+  * Preserve CLI, headless operation and the existing recovery engine.
+  * Include checksum-pinned Gunicorn 26.2.0 and explicit HTTPS LAN opt-in.
+  * Permit nonempty mountpoints and normal ext4 journal replay; explicitly
+    reject active returned-device mounts and retain error-state checks.
+  * Clarify interactive validation and repeat real USB/Docker validation.
+
+ -- USB Storage Watch contributors <maintainers@example.invalid>  Tue, 27 Oct 2026 03:00:00 +0000
+
+usb-storage-watch (1.0.0) unstable; urgency=medium
+
+  * Initial standalone distribution with guarded ext4 recovery, optional
+    qualified USB port recovery, Docker recovery and authenticated TLS mail.
+  * Validate package and service lifecycle in an Ubuntu 24.04 VMware guest.
+
+ -- USB Storage Watch contributors <maintainers@example.invalid>  Tue, 27 Oct 2026 00:00:00 +0000

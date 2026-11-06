@@ -1,0 +1,11 @@
+[Unit]
+Description=Check explicitly selected container boot prerequisites
+
+[Timer]
+OnBootSec=45
+OnUnitInactiveSec=20
+AccuracySec=1
+Unit=usb-storage-watch-boot.service
+
+[Install]
+WantedBy=timers.target

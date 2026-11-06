@@ -1,0 +1,41 @@
+[Unit]
+Description=USB Storage Watch monitoring for drive %i
+After=local-fs.target network.target
+Before=shutdown.target umount.target
+Conflicts=shutdown.target
+# Always allow enable-only cleanup, even if the main config has been removed.
+# An unconfigured monitor exits cleanly without starting an observation loop.
+
+[Service]
+Type=simple
+User=root
+Environment=USB_STORAGE_WATCH_DRIVE=%i
+ExecStartPre=-/usr/bin/python3 -I /usr/lib/usb-storage-watch/engine.py _usb-cleanup
+ExecStart=/usr/bin/python3 -I /usr/lib/usb-storage-watch/engine.py run
+ExecStopPost=-/usr/bin/python3 -I /usr/lib/usb-storage-watch/engine.py _usb-cleanup
+WorkingDirectory=/
+StateDirectory=usb-storage-watch/drives/%i
+StateDirectoryMode=0700
+TimeoutStartSec=15
+TimeoutStopSec=25
+KillMode=mixed
+Restart=on-failure
+RestartSec=10
+UMask=0077
+LimitCORE=0
+NoNewPrivileges=yes
+CapabilityBoundingSet=CAP_SYS_ADMIN CAP_DAC_OVERRIDE CAP_DAC_READ_SEARCH CAP_SYS_PTRACE CAP_SYS_RAWIO
+RestrictSUIDSGID=yes
+RestrictRealtime=yes
+RestrictNamespaces=yes
+LockPersonality=yes
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+SystemCallArchitectures=native
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=usb-storage-watch-%i
+# Mount namespace sandboxing would obscure host mounts and read/write flags.
+PrivateMounts=no
+
+[Install]
+WantedBy=multi-user.target

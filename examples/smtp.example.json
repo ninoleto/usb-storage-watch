@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "security": "starttls",
+  "host": "smtp.example.test",
+  "port": 587,
+  "username": "sender@example.test",
+  "password": "",
+  "sender": "sender@example.test",
+  "recipient": "recipient@example.test"
+}

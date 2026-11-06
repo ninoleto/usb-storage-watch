@@ -1,0 +1,20 @@
+{
+  "name": "companion-module-usb-storage-watch",
+  "version": "0.2.6",
+  "type": "module",
+  "main": "src/main.js",
+  "license": "MIT",
+  "engines": {
+    "node": ">=26.12.1 <27"
+  },
+  "scripts": {
+    "test": "node --test test/*.test.js",
+    "package": "companion-module-build"
+  },
+  "dependencies": {
+    "@companion-module/base": "2.2.2"
+  },
+  "devDependencies": {
+    "@companion-module/tools": "3.1.1"
+  }
+}

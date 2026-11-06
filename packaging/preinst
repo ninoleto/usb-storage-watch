@@ -1,0 +1,10 @@
+#!/bin/sh
+set -eu
+[ -z "${DPKG_ROOT:-}" ] || exit 0
+if [ -e /var/lib/usb-storage-watch/install-manifest.json ]; then
+    echo 'Portable installation detected; remove it with its installer before switching to dpkg.' >&2
+    exit 1
+fi
+if [ "$1" = upgrade ] && [ -f /usr/lib/usb-storage-watch/maintenance.py ]; then
+    /usr/bin/python3 -I /usr/lib/usb-storage-watch/maintenance.py prepare-upgrade
+fi

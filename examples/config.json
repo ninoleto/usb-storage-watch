@@ -1,0 +1,52 @@
+{
+  "version": 1,
+  "disk": {
+    "uuid": "",
+    "mountpoint": "/mnt/storage",
+    "label": "USB storage",
+    "fstab_options": ""
+  },
+  "monitor": {
+    "interval": 15,
+    "observations": 2,
+    "boot_grace": 90
+  },
+  "notifications": {
+    "enabled": false
+  },
+  "recovery": {
+    "mount": false,
+    "wait": 15,
+    "attempts": 1,
+    "worker_timeout": 120,
+    "return_timeout_minutes": 5
+  },
+  "dependent": {
+    "enabled": false,
+    "uuid": "",
+    "mountpoint": "",
+    "image": "",
+    "fstab_options": ""
+  },
+  "usb": {
+    "enabled": false,
+    "profile": null,
+    "disable_seconds": 1,
+    "enumeration_seconds": 20
+  },
+  "docker": {
+    "enabled": false,
+    "socket": "/var/run/docker.sock",
+    "api": "v1.47",
+    "health_timeout": 120,
+    "worker_timeout": 720,
+    "containers": []
+  },
+  "standby": {
+    "enabled": false,
+    "idle_seconds": 1800
+  },
+  "services": {
+    "units": []
+  }
+}

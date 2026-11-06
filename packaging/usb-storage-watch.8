@@ -1,0 +1,73 @@
+.TH USB-STORAGE-WATCH 8 "October 2026" "USB Storage Watch 2.0.0~ui6"
+.SH NAME
+usb-storage-watch \- monitor one ext4 filesystem with optional guarded recovery
+.SH SYNOPSIS
+.B usb-storage-watch
+.RI [ --version ]
+.RI [ --root " directory" ]
+.I command
+.SH DESCRIPTION
+Monitors the configured ext4 filesystem and records persistent incidents.
+Normal mounts, qualified individual USB port recovery and selected Docker
+container recovery require explicit configuration. Installation does not
+enable or start the service. No formatting or filesystem repair is performed.
+.SH COMMANDS
+.TP
+.B setup
+Interactively select storage and optional recovery/notification settings.
+Stop the service before changing configuration.
+.TP
+.B smtp-setup
+Configure authenticated SMTP with verified STARTTLS or implicit TLS.
+.TP
+.B validate
+Validate protected configuration without printing credentials.
+.TP
+.B diagnose
+Check configuration, persistent state, dependencies and current mount health.
+.TP
+.B check
+Print current filesystem observations. Exit 2 means storage is unhealthy.
+.TP
+.B status
+Print private persistent incident, recovery and delivery information.
+.TP
+.B test-email
+Send one explicitly labelled test to the configured SMTP recipient.
+.TP
+.B verify-apps
+Check selected Docker binds and running-container access without restarting.
+.TP
+.B run
+Run the monitor. Normally invoked through usb-storage-watch.service.
+.TP
+.B usb-candidate --output PATH
+Collect private hardware identity without qualifying or resetting a port.
+.TP
+.B qualify-usb --profile PATH --date YYYY-MM-DD --evidence TEXT
+Record operator attestation of an independent offline qualification.
+Unsupported or unqualified hardware must retain USB recovery disabled.
+.SH OPTIONS
+.TP
+.B --root DIRECTORY
+Use a staged installation for validate or diagnose only; no host probes.
+.TP
+.B --version
+Print the distribution version.
+.SH FILES
+.TP
+.I /etc/usb-storage-watch/config.json
+Root-owned configuration, mode 0600 in a mode 0700 directory.
+.TP
+.I /etc/usb-storage-watch/smtp.json
+Root-owned SMTP credentials with the same protections.
+.TP
+.I /var/lib/usb-storage-watch
+Private persistent state, retained on removal and purge.
+.TP
+.I /usr/share/doc/usb-storage-watch/README.md
+Installation instructions, recovery scope and links to detailed documentation.
+.SH SEE ALSO
+.BR systemctl (1),
+.BR journalctl (1),
+.BR fstab (5)

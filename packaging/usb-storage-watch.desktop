@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=USB Storage Watch
+Comment=Open the USB storage monitoring and recovery dashboard
+Exec=/usr/bin/python3 -I /usr/lib/usb-storage-watch/open_dashboard.py
+Icon=usb-storage-watch
+Terminal=false
+Categories=System;
+StartupNotify=false

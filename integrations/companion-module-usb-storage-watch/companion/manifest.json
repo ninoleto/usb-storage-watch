@@ -1,0 +1,34 @@
+{
+  "$schema": "../node_modules/@companion-module/base/assets/manifest.schema.json",
+  "type": "connection",
+  "id": "usb-storage-watch",
+  "name": "USB Storage Watch",
+  "shortname": "Storage Watch",
+  "description": "Drive and app status with guarded one-press controls through Storage Watch",
+  "version": "0.2.6",
+  "license": "MIT",
+  "maintainers": [
+    {
+      "name": "USB Storage Watch maintainers"
+    }
+  ],
+  "runtime": {
+    "type": "node26",
+    "api": "nodejs-ipc",
+    "apiVersion": "2.2.2",
+    "entrypoint": "../src/main.js"
+  },
+  "legacyIds": [],
+  "manufacturer": "USB Storage Watch",
+  "products": [
+    "Storage Watch UI36+"
+  ],
+  "keywords": [
+    "storage",
+    "Docker",
+    "USB",
+    "recovery"
+  ],
+  "repository": "",
+  "bugs": ""
+}

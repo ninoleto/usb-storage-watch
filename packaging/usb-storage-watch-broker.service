@@ -1,0 +1,35 @@
+[Unit]
+Description=USB Storage Watch authenticated administration broker
+After=local-fs.target
+
+[Service]
+Type=simple
+User=root
+Group=usb-storage-watch-web
+ExecStart=/usr/bin/python3 -I /usr/lib/usb-storage-watch/web_broker.py
+WorkingDirectory=/
+RuntimeDirectory=usb-storage-watch-web
+RuntimeDirectoryMode=0750
+StateDirectory=usb-storage-watch
+StateDirectoryMode=0700
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=35
+UMask=0077
+LimitCORE=0
+NoNewPrivileges=yes
+CapabilityBoundingSet=CAP_DAC_OVERRIDE CAP_DAC_READ_SEARCH CAP_CHOWN CAP_FOWNER CAP_SETUID CAP_SETGID CAP_AUDIT_WRITE CAP_SYS_ADMIN CAP_SYS_RAWIO CAP_SYS_PTRACE
+# Keep the already-bounded credential-drop capabilities across the hardened exec.
+# Non-root access probes clear all capabilities when changing UID.
+AmbientCapabilities=CAP_SETUID CAP_SETGID
+RestrictSUIDSGID=yes
+RestrictRealtime=yes
+RestrictNamespaces=yes
+LockPersonality=yes
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6 AF_NETLINK
+SystemCallArchitectures=native
+# Manual workers share the engine guards and host mount namespace.
+PrivateMounts=no
+
+[Install]
+WantedBy=multi-user.target

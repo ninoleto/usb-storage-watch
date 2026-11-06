@@ -1,0 +1,13 @@
+Package: usb-storage-watch
+Version: 2.0.1~beta1
+Section: admin
+Priority: optional
+Architecture: all
+Maintainer: USB Storage Watch contributors <maintainers@example.invalid>
+Depends: python3 (>= 3.10), systemd (>= 249), util-linux (>= 2.37), fdisk, e2fsprogs, mount (>= 2.37), coreutils (>= 8.32), udev, iproute2, usbutils, ca-certificates, hdparm, psmisc, acl, python3-flask (>= 3.0), python3-pam, python3-yaml, openssl, xdg-utils
+Description: TEST ONLY - USB storage monitoring and recovery
+ Persistent incidents, authenticated TLS email, optional normal remounting,
+ automatically verified isolated software USB reconnect and Docker recovery.
+ All automatic mutations default off. Configure before starting the service.
+ Authenticated localhost dashboard with an unprivileged web server,
+ desktop launcher, safe manual controls and guarded HDD idle standby.

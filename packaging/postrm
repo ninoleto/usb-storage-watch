@@ -1,0 +1,8 @@
+#!/bin/sh
+set -eu
+[ -z "${DPKG_ROOT:-}" ] || exit 0
+# Preserve generated configuration, credentials and persistent incident/delivery state,
+# even on purge. No mount, USB, Docker or unrelated service actions.
+if [ -d /run/systemd/system ] && { [ "$1" = remove ] || [ "$1" = purge ]; }; then
+    /usr/bin/timeout 15 /usr/bin/systemctl daemon-reload
+fi

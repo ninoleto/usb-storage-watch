@@ -1,0 +1,18 @@
+#!/bin/sh
+set -eu
+[ -z "${DPKG_ROOT:-}" ] || exit 0
+case "$1" in
+    upgrade|failed-upgrade) /usr/bin/python3 -I /usr/lib/usb-storage-watch/maintenance.py prepare-upgrade ;;
+    remove|deconfigure) /usr/bin/python3 -I /usr/lib/usb-storage-watch/maintenance.py prepare-remove ;;
+esac
+if [ -f /usr/lib/usb-storage-watch/web_install.py ]; then
+    case "$1" in
+        upgrade|failed-upgrade)
+            # Use the new helper even before the new package is unpacked.
+            /usr/bin/python3 -I - prepare-upgrade <<'USW_WEB_LIFECYCLE'
+@WEB_LIFECYCLE@
+USW_WEB_LIFECYCLE
+            ;;
+        remove|deconfigure) /usr/bin/python3 -I /usr/lib/usb-storage-watch/web_install.py prepare-remove ;;
+    esac
+fi

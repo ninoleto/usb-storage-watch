@@ -63,8 +63,18 @@ class Context:
             try:
                 if entry['lan'] and entry['address'] not in [v['address'] for v in self.addresses()]:
                     raise ValueError('The listener address is no longer assigned to this computer.')
-                if entry.get('scheme')=='https' and certificate==(self.web_dir/'certificate.pem').read_text() and not self.certificate_trusted():
-                    raise ValueError('The saved HTTPS certificate does not match the configured trust authority.')
+                if entry.get('scheme') == 'https':
+                    saved_path = self.web_dir / 'certificate.pem'
+                    try:
+                        saved = saved_path.read_text()
+                    except FileNotFoundError:
+                        # First HTTPS setup has only proposed material. Other read
+                        # failures (including dangling links) must still fail closed.
+                        if saved_path.is_symlink():
+                            raise
+                        saved = None
+                    if saved is not None and certificate == saved and not self.certificate_trusted():
+                        raise ValueError('The saved HTTPS certificate does not match the configured trust authority.')
                 self.b.lan_ready(entry, certificate)
                 return
             except (OSError, ValueError):

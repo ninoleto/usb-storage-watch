@@ -1,11 +1,12 @@
-# Beta release preparation — not published
+# Beta 2 release preparation
 
-Package/runtime **2.0.1~beta1**, local release tag **v2.0.1-beta.1**.
+Package/runtime **2.0.1~beta2**, local release tag **v2.0.1-beta.2**.
 Companion **0.2.6** is unchanged. The publication repository is a clean export;
 private Git history, host settings, credentials, receipts and logs are excluded.
 Preserve original private checkpoints separately; never push them with `--all` or
-`--mirror`. No GitHub destination/owner is recorded in this source tree. Confirm
-owner/repository, visibility and publication authorization before creating a release.
+`--mirror`. The authorized public destination is `ninoleto/usb-storage-watch`. Publish only
+the sanitized history descending from Beta 1; preserve Beta 1 and use a prerelease,
+never the latest/stable release. Verify remote refs and downloaded asset hashes.
 
 Use [BETA-GITHUB-RELEASE.md](BETA-GITHUB-RELEASE.md) as the proposed GitHub body and
 mark the release **pre-release**. [VALIDATION-CURRENT.md](VALIDATION-CURRENT.md)
@@ -14,15 +15,15 @@ transfer acceptance is explicitly deferred; do not resume password recovery.
 
 Release assets:
 
-- `usb-storage-watch_2.0.1~beta1_all.deb`
-- `usb-storage-watch-2.0.1~beta1.tar.gz` — portable application source/installer,
+- `usb-storage-watch_2.0.1-beta2_all.deb`
+- `usb-storage-watch-2.0.1-beta2.tar.gz` — portable application source/installer,
   including the bundled module; module development source is in the Git tree.
 - `usb-storage-watch-companion-0.2.6.tgz`
 - `SHA256SUMS`
 
 The module SHA256 must remain
 `0640988a2e741099c140b40db32281066d196f3e93eb0af4a4b32b983b250b58`.
-Version ordering is `2.0.0~ui40 < 2.0.1~beta1 < 2.0.1`. Do not rename UI40 artifacts.
+Version ordering is `2.0.0~ui40 < 2.0.1~beta1 < 2.0.1~beta2 < 2.0.1`. Do not rename UI40 artifacts.
 
 Build as an ordinary user with Python 3.10+ and `dpkg-deb`; installer smoke also
 requires `fakeroot` and `systemd-analyze`. Runtime dependencies are declared in
@@ -32,13 +33,12 @@ requires `fakeroot` and `systemd-analyze`. Runtime dependencies are declared in
 python3 -B -I tools/build.py
 python3 -B -I tools/integration_test.py --smoke-only
 python3 -B -I tools/privacy_scan.py
-cp src/usb_storage_watch/companion/module.tgz dist/usb-storage-watch-companion-0.2.6.tgz
 ```
 
-From the artifact directory, generate/verify the complete manifest:
+The builder creates GitHub-compatible filenames and the complete three-asset
+manifest. From the artifact directory, verify it:
 
 ```sh
-sha256sum usb-storage-watch_2.0.1~beta1_all.deb usb-storage-watch-2.0.1~beta1.tar.gz usb-storage-watch-companion-0.2.6.tgz > SHA256SUMS
 sha256sum -c SHA256SUMS
 ```
 
@@ -46,7 +46,7 @@ After reviewing existing storage ownership and making a private backup, install
 only while no storage/recovery operation is active:
 
 ```sh
-sudo apt install ./usb-storage-watch_2.0.1~beta1_all.deb
+sudo apt install ./usb-storage-watch_2.0.1-beta2_all.deb
 ```
 
 A fresh apt installation creates the non-login web account, enables the privileged
@@ -71,7 +71,8 @@ or target-host acceptance from isolated package tests.
 
 ## Developer handoff
 
-Runtime logic remains UI40. `web_lifecycle.py` is embedded in the built prerm for
+Beta 2 changes only first-HTTPS readiness/status and reviewed mounted-image
+adoption, plus associated tests and packaging/documentation. `web_lifecycle.py` is embedded in the built prerm for
 normal and failed-upgrade preparation before unpack; preserve supervisor-first
 shutdown, worker readback and existing maintenance guards. Shared manual app
 storage verification remains in `web_docker.py`, using boot/recovery verifiers and

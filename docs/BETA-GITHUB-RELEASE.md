@@ -1,58 +1,76 @@
-# USB Storage Watch 2.0.1 beta 1
+# USB Storage Watch 2.0.1 Beta 2
 
-Pre-release for systemd Linux hosts using removable ext4 storage and explicitly
-selected Docker applications. Ordinary external folders work without virtual images.
+Testing prerelease for systemd Linux hosts with removable ext4 storage and
+explicitly selected Docker apps. Ordinary external folders need no virtual image.
 
-- Independent computer-startup and drive-failure recovery settings.
-- Required filesystem/image identity checked before manual Start/Restart; missing
-  storage refuses the request without mounting implicitly or mutating Docker.
-- Reviewed safe unmount stops selected dependent apps before storage removal;
-  remounting retains deliberate app stops.
-- Persistent drive-return timeout, one failure notification and guarded late-return
-  recovery, with incident-scoped cleanup and exact container identities.
-- Upgrade preparation stops the listener supervisor first and verifies old processes
-  and workers exited, including dpkg's failed-upgrade fallback.
-- Companion **0.2.6**, unchanged: one-press controls through existing safeguards,
-  editable layouts, separate status freshness and no replay of uncertain commands.
+This release fixes two Beta 1 setup blockers:
 
-## Installation
+- **First-time HTTPS:** a missing saved certificate no longer prevents probing the
+  proposed HTTPS listener. Certificate-chain/hostname verification, exact listener
+  and certificate checks, authenticated confirmation and rollback remain enforced.
+  The GUI distinguishes preparing, ready for confirmation and failed states.
+- **Existing mounted images:** GUI review can adopt a verified ext4 fstab loop image
+  using its current backing file, filesystem UUID and mountpoint. Confirmation
+  rechecks physical/loop identity and operation locks, saves only configuration,
+  and preserves mount, fstab/options, data, ownership and permissions. No unmount,
+  formatting, data copying or FTP stop is needed. Conflicts are refused; repeated
+  adoption preserves saved choices. See [existing-image guidance](https://github.com/ninoleto/usb-storage-watch/blob/v2.0.1-beta.2/docs/EXISTING-IMAGE.md).
 
-Download the Debian package and `SHA256SUMS`. If all three assets are downloaded,
-verify the complete manifest and install while recovery/storage operations are idle:
+Companion **0.2.6** is unchanged. Existing controls and buttons need no replacement.
+Boot/recovery behavior, authentication and manual app storage protections remain.
+Beta 1's tag and assets are retained.
+
+## Install or upgrade
+
+Download all three package assets and `SHA256SUMS` into one folder, then verify:
 
 ```sh
 sha256sum -c SHA256SUMS
-sudo apt install ./usb-storage-watch_2.0.1~beta1_all.deb
+sudo apt install ./usb-storage-watch_2.0.1-beta2_all.deb
 ```
 
-Open `http://localhost:8765`. Fresh installation enables the broker, localhost
-dashboard and boot timer; drive/app automation requires configuration and LAN starts
-disabled. Back up existing settings and coordinate any previous watcher first.
-Never operate two recovery owners for the same storage.
+The package's Debian version is **2.0.1~beta2**, which upgrades **2.0.1~beta1**.
+Public filenames use a hyphen so GitHub preserves the checksum manifest's names.
+The source archive is `usb-storage-watch-2.0.1-beta2.tar.gz`; build with
+`python3 -B tools/build.py` from its extracted root. Install the built Debian package
+with apt to resolve distribution dependencies. See README for portable installation.
+Packages are unsigned; checksums verify bytes, not publisher signatures.
 
-The portable application source includes its installer and bundled module. The
-Companion development source is also included in the tagged Git repository. Import
-the separate 0.2.6 archive only if needed; existing 0.2.6 buttons need no replacement.
-Packages are unsigned; checksums are integrity checks, not signature verification.
+Privately back up settings/state and coordinate previous storage automation first.
+Install while storage/recovery is idle; the installer refuses unsafe upgrades.
+Fresh installs enable the broker, localhost dashboard and boot coordinator timer.
+LAN listening starts disabled; monitoring, recovery and app startup require GUI
+configuration. Open `http://localhost:8765`, retrieve the management token using
+the dashboard instructions, and configure network/image settings there. An upgrade
+preserves existing configuration, credentials and intended service enablement.
+Do not run competing recovery owners. Image adoption does not disable another
+watcher or add app dependencies automatically.
 
 ## Validation and limits
 
-Carried-forward Ubuntu physical tests cover a five-minute no-return timeout,
-late recovery and a connected-storage reboot. UI40's real upgrade verified process
-renewal and preserved runtime/configuration. The operator reports successful safe
-unmount, clients blocking starts, remount retaining stops, explicit starts and
-visible existing files; Immich briefly showed Starting before Running. Those client
-refusals sent no command and are not a physical backend-refusal test. Backend
-storage protection has separate simulated and authenticated-client coverage.
+Beta 1's fresh HTTPS failure was reproduced. Beta 2 tests include real verified
+loopback TLS, HTTP-to-HTTPS confirmation/rollback and certificate/hostname refusal;
+disposable ext4 files with real probes/configuration locks and simulated kernel
+mount/loop/service observations; focused Chromium checks at desktop/tablet/mobile
+sizes; and fresh/upgrade installation in private package roots. Python 3.12 with
+Flask 3.0.2 is covered. These are isolated tests, not target-host acceptance.
 
-This beta uses that runtime with version/publication changes. Package validation
-uses isolated roots and simulated services; no live installation of the beta or
-Zorin production deployment is claimed. Erugo authenticated upload/download is
-deliberately deferred to target-host acceptance. Running/visible files do not prove
-transfer integrity or readiness with delayed databases/cache.
+Prior Ubuntu physical timeout/late-recovery/reboot and operator-reported manual
+unmount/remount/app-start acceptance are carried forward; those hardware tests were
+not repeated for this focused release. Zorin Beta 2 HTTPS/adoption acceptance is
+**pending**. Erugo authenticated transfer testing remains pending. Running or
+visible files do not prove file-transfer integrity or arbitrary delayed database/
+cache readiness; direct Docker starts do not execute Compose dependency ordering.
 
-Existing loop images can be retained through the documented CLI/config route.
-Native Plex/FTP/backup consumers are not stopped by Docker controls; a reviewed
-native-service and storage-ownership plan is required. Software USB reconnect does
-not prove electrical power cycling. There is no general crash-restart watchdog.
-The historical Companion HTTP 503 cause remains unidentified.
+The historical intermittent Companion **GET /api/docker-overview HTTP 503** remains
+**unresolved**; its cause is not established. No transport/backend behavior was
+changed for it here. Native Plex, FTP and backup users still require a reviewed
+shutdown/recovery ownership plan; Docker controls do not manage native consumers.
+Software reconnect does not prove electrical power cycling. Storage Watch is not
+a general application-crash restart watchdog.
+
+Rollback: keep the previous installer and private configuration/state backup.
+While idle, use apt's explicit downgrade option with that verified package; restore
+configuration only if required, preserving later incident receipts and mount/data
+state. Beta 2 adoption never changes the existing image or fstab, so rollback needs
+no data copy or remount. Beta 1 retains its documented setup limitations.

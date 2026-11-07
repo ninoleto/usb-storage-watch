@@ -54,8 +54,11 @@ class ImageRouteTests(unittest.TestCase):
         names=set(re.findall(r"apiRequest\(\s*['\"`]([^'\"`?]+)",js.read_text()))
         for name in names:
             with self.subTest(action=name):
-                self.assertTrue(name=='login' or name in w.READS|w.WRITES, f'Frontend does not allow {name}')
-                self.assertTrue(name=='login' or name in f.GLOBAL|f.FLEET|b.READS|b.WRITES,
+                # This authenticated aggregate has an explicit Flask route; it
+                # does not use the generic per-drive proxy whitelist.
+                direct={'login','integration-info'}
+                self.assertTrue(name in direct or name in w.READS|w.WRITES, f'Frontend does not allow {name}')
+                self.assertTrue(name in direct or name in f.GLOBAL|f.FLEET|b.READS|b.WRITES,
                                 f'Broker does not allow frontend operation: {name}')
 
     def test_browser_and_broker_whitelists_agree(self):

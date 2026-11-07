@@ -15,7 +15,10 @@ import gzip
 import json
 
 ROOT=Path(__file__).resolve().parents[1]
-VERSION='2.0.1~beta1'
+VERSION='2.0.1~beta2'
+# GitHub normalizes '~' in asset names. Keep Debian version ordering internally,
+# but create portable public names and checksums before upload.
+ASSET_VERSION=VERSION.replace('~','-')
 EPOCH=1767225600
 spec=importlib.util.spec_from_file_location('installer',ROOT/'tools/install.py')
 installer=importlib.util.module_from_spec(spec);spec.loader.exec_module(installer)
@@ -74,15 +77,21 @@ def main():
         controlfile.write_text(controlfile.read_text()+f'Installed-Size: {installed_size}\n')
         for p in tree.rglob('*'): os.utime(p,(EPOCH,EPOCH))
         os.utime(tree,(EPOCH,EPOCH))
-        subprocess.run(['dpkg-deb','--root-owner-group','--build',str(tree),str(dist/f'usb-storage-watch_{VERSION}_all.deb')],check=True,timeout=60)
-    archive=dist/f'usb-storage-watch-{VERSION}.tar.gz'
+        subprocess.run(['dpkg-deb','--root-owner-group','--build',str(tree),str(dist/f'usb-storage-watch_{ASSET_VERSION}_all.deb')],check=True,timeout=60)
+    archive=dist/f'usb-storage-watch-{ASSET_VERSION}.tar.gz'
     with archive.open('wb') as raw, gzip.GzipFile(filename='',mode='wb',fileobj=raw,mtime=EPOCH) as zipped, tarfile.open(fileobj=zipped,mode='w') as tar:
         for p in source_files():
-            info=tar.gettarinfo(str(p),arcname=f'usb-storage-watch-{VERSION}/'+str(p.relative_to(ROOT)))
+            info=tar.gettarinfo(str(p),arcname=f'usb-storage-watch-{ASSET_VERSION}/'+str(p.relative_to(ROOT)))
             info.uid=info.gid=0;info.uname=info.gname='root';info.mtime=EPOCH;info.mode=0o644
             with p.open('rb') as data: tar.addfile(info,data)
-    artifacts=[dist/f'usb-storage-watch_{VERSION}_all.deb',archive]
+    companion=ROOT/'src/usb_storage_watch/companion'
+    metadata=json.loads((companion/'module.json').read_text())
+    module=dist/('usb-storage-watch-companion-'+metadata['version']+'.tgz')
+    content=(companion/'module.tgz').read_bytes()
+    if hashlib.sha256(content).hexdigest()!=metadata['sha256']:raise ValueError('Bundled Companion checksum mismatch')
+    module.write_bytes(content)
+    artifacts=[dist/f'usb-storage-watch_{ASSET_VERSION}_all.deb',archive,module]
     (dist/'SHA256SUMS').write_text(''.join(hashlib.sha256(p.read_bytes()).hexdigest()+'  '+p.name+'\n' for p in artifacts))
-    print('Built two packages with normalized ownership/timestamps and SHA256SUMS.')
+    print('Built Debian/source packages and copied verified Companion module; SHA256SUMS matches public filenames.')
 
 if __name__=='__main__': main()

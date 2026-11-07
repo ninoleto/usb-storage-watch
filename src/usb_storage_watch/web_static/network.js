@@ -32,7 +32,7 @@ function networkMessage(){
  const v=networkView;if(v.busy)return v.message||'Sending request…';
  if(v.recoveryError)return v.recoveryError;
  if(v.error)return v.error;
- if(networkActive())return v.transaction.message;
+ if(networkActive()||['failed','expired','cancelled'].includes(v.transaction.phase))return v.transaction.message;
  if(networkValidation())return networkValidation();
  if(networkDirty())return 'Unsaved changes. Apply, open the proposed address, then confirm there within 3 minutes. Without confirmation, your current settings stay in place.';
  return v.readError||v.message||(['failed','expired','cancelled'].includes(v.transaction.phase)?v.transaction.message:'')||(v.listener?.phase!=='ready'?v.listener?.message:'')||v.transaction.message||v.listener?.message||'Current settings saved. Changes here affect this app only.';
@@ -125,10 +125,22 @@ function renderNetwork(){
  $$('details',next).forEach((el,i)=>{const key=el.dataset.networkDetail||'guide-'+i;if(key in opened)el.open=opened[key];});
  enhanceSelects(next);if(focus)document.getElementById(focus)?.focus({preventScroll:true});updateNetworkButtons();
 }
+function networkOutcome(t=networkView.transaction){
+ const messages={preparing:'Preparing connection test. Current access stays available.',pending:'New connection ready for confirmation. Open the proposed address and confirm before the countdown ends.'};
+ return {message:messages[t.phase]||t.message||'Checking the network operation.',error:['failed','expired'].includes(t.phase)};
+}
+function syncNetworkOutcome(){
+ const t=networkView.transaction;if(!t.operation)return;
+ const outcome=networkOutcome(t);networkView.message='';
+ for(const [key,record] of actionFeedback){
+   if(record.networkOperation===t.operation){record.message=outcome.message;record.error=outcome.error;syncActionFeedback(key);}
+ }
+}
 async function refreshNetwork({display=true}={}){
  const session=csrfToken,value=await apiRequest('network-state');if(session!==csrfToken)return;
  const v=networkView,wasActive=networkActive(),wasDirty=networkDirty(),before=JSON.stringify([v.loaded,v.saved,v.addresses,v.transaction.phase,v.transaction.message,v.certificate,v.recoveryError,v.url,v.listener]);
  v.saved=value.config;v.url=value.url;v.listener=value.listener||{phase:value.url?'ready':'unavailable',message:value.url?'Network listener verified.':'Network listener unavailable.'};v.localUrl=value.local_url;v.addresses=value.addresses||[];v.certificate=value.certificate||{available:false};v.transaction=value.transaction||{phase:'idle'};v.recoveryError=value.recovery_error||'';v.observedAt=performance.now();v.loaded=true;v.readError='';
+ syncNetworkOutcome();
  if(wasActive&&!networkActive())v.replaceTrust=false;
  if(networkActive()&&v.transaction.config)v.draft=networkValues(v.transaction.config);
  else if(!v.draft||wasActive||!wasDirty)v.draft=networkValues(v.saved);
@@ -169,10 +181,10 @@ async function networkCommand(action,id,value,context=null){
  try{
    if(method==='network-stage'&&networkNeedsCertificate()&&!v.certificate.available){v.message='Preparing the HTTPS certificate and connection test…';updateNetworkButtons();v.certificate=await apiRequest('network-certificate',{data:{}});if(session!==csrfToken)return;}
    const result=await apiRequest(method,{data});if(session!==csrfToken)return;
-   if(method==='network-certificate')v.certificate=result;else{v.transaction=result;v.observedAt=performance.now();}
+   if(method==='network-certificate')v.certificate=result;else{v.transaction=result;v.observedAt=performance.now();if(context?.record)context.record.networkOperation=result.operation;}
    v.message='';await refreshNetwork({display:false});
    if(action==='network-download')downloadNetworkCertificate();
-   outcome={message:action==='network-download'?'Certificate download requested. Follow the import instructions below.':method==='network-stage'?'New connection ready to test. Open the proposed address and confirm before the countdown ends.':method==='network-renew'?'Server certificate renewed.':method==='network-certificate'?'Trust certificate ready.':method==='network-cancel'?'Network change cancelled. Previous settings kept.':'Connection confirmed.'};
+   outcome=method==='network-certificate'?{message:action==='network-download'?'Certificate download requested. Follow the import instructions below.':'Trust certificate ready.'}:networkOutcome();
  }catch(e){
    if(session!==csrfToken)return;
    const failure=errorMessage(e);try{await refreshNetwork({display:false});}catch(_){}

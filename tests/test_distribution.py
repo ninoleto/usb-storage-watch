@@ -114,11 +114,12 @@ class ConfigurationTests(unittest.TestCase):
             c=fixture.configuration(w);c['disk']['mountpoint']=path
             with self.assertRaises(s.ConfigError):s.validate(c)
     def test_configuration_change_prevents_worker_mutation(self):
-        with mock.patch.object(w.settings,'read',return_value=w.SETTINGS):
-            w.require_configuration({'config_digest':w.CONFIG_DIGEST})
-            with self.assertRaises(w.Unsafe):w.require_configuration({'config_digest':'old'})
-        c=copy.deepcopy(w.SETTINGS);c['recovery']['wait']=120
-        with mock.patch.object(w.settings,'read',return_value=c),self.assertRaises(w.Unsafe):w.config_load()
+        with tempfile.TemporaryDirectory() as root, mock.patch.object(w.drives,'roots',return_value=(Path(root)/'config',Path(root)/'state')):
+            with mock.patch.object(w.settings,'read',return_value=w.SETTINGS):
+                w.require_configuration({'config_digest':w.CONFIG_DIGEST})
+                with self.assertRaises(w.Unsafe):w.require_configuration({'config_digest':'old'})
+            c=copy.deepcopy(w.SETTINGS);c['recovery']['wait']=120
+            with mock.patch.object(w.settings,'read',return_value=c),self.assertRaises(w.Unsafe):w.config_load()
     def test_state_for_different_disk_refused(self):
         with tempfile.TemporaryDirectory() as root:
             p=Path(root)/'state.json';state=w.fresh_state();state['target']=['other','/elsewhere'];p.write_text(json.dumps(state))

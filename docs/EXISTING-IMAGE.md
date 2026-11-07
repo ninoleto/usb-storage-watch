@@ -1,10 +1,36 @@
 # Registering an existing fstab-managed image
 
-The CLI/configuration supports an existing ext4 loop image without creating,
-formatting, copying, moving or mounting it. This is different from the dashboard's
-**Add existing image** workflow: that UI refuses a mountpoint already in use, an
-existing fstab entry or an attached image. Do not remove fstab entries or detach
-storage to bypass that UI limitation.
+Beta 2 supports **reviewed GUI adoption** of a valid, already-mounted ext4 loop
+image. Registration preserves the backing file, mountpoint, mount, fstab bytes and
+options, ownership, permissions and contents. It does not unmount, format, copy,
+remount or stop FTP. The CLI/configuration path remains available separately.
+
+## Recommended GUI procedure
+
+1. Register the physical drive through Setup, keeping its verified existing mount.
+2. Open **Virtual Disk Images → Add existing image** for that drive. Scan for the
+   `.img` file, or enter its full path in Advanced. Choose **Add selected image**
+   or **Review existing image**.
+3. Review **Adopt existing mounted image?**. Check the detected backing path,
+   filesystem UUID, existing mountpoint and Mount on recovery preference.
+4. Confirm once. The backend rechecks the physical filesystem, image superblock,
+   loop backing file/device/inode, zero offset/size limit, mount and exact fstab
+   entry under the existing locks. It backs up the old configuration privately,
+   saves only the image registration and verifies readback. A fresh repeated
+   adoption is a no-op that retains saved names and recovery choices.
+5. Check the registered image's verified status. Select it for each app only when
+   required; ordinary-folder apps do not need a virtual image.
+
+The existing mount must be unambiguous ext4, read/write and healthy. Paths must be
+normalized, inside the verified physical mount, and free of symlinks. Duplicate
+fstab entries/aliases, conflicting registrations, unsupported options, changed
+identity or active storage/recovery operations refuse adoption without changing
+storage. The existing absolute backing-file fstab source and supported options are
+retained verbatim; UUID/label-only loop definitions need administrator review.
+An already-active USW monitor is briefly paused under the existing image-setup
+locks and resumed with the new configuration; an inactive monitor stays inactive.
+No other service is stopped. Configuration backup is under that drive's private
+`image-backups` state directory. Do not detach storage to bypass a refusal.
 
 ## Required review before handover
 
@@ -28,7 +54,7 @@ storage to bypass that UI limitation.
   ownership have been reviewed. Registration is configuration-only, so the
   existing healthy mount can remain mounted.
 
-## CLI procedure for a new, otherwise unconfigured drive
+## Optional CLI procedure for a new, otherwise unconfigured drive
 
 Run on the target host only in the approved handover window:
 
@@ -78,10 +104,8 @@ use `sudo -n env USB_STORAGE_WATCH_DRIVE=<profile-UUID> usb-storage-watch setup`
 (and the same environment for validation/diagnosis). Never create a second profile
 for the same physical disk. Do not rerun the setup wizard on an established app
 configuration: it resets Docker selections, USB enablement and notification choices.
-For an established profile, the documented `dependent` fields may instead be edited
-privately while its monitor is stopped and idle, with a configuration backup,
-validation and review preserving every other field. Do not populate both
-`dependent` and `images` with the same image identity.
+For an established profile, use reviewed GUI adoption above; it preserves other
+settings. Do not populate both `dependent` and `images` with the same identity.
 
 Keep fstab as the persistent mount definition and USW as the sole outage-recovery
 owner after the old watcher/helper has been safely disabled. Configure apps through
@@ -99,8 +123,9 @@ old watcher/settings. Keep only one recovery owner. Restore the previous USW
 configuration if needed, retaining later incident receipts. The image, fstab and
 data never moved, so no image copy-back is required.
 
-Source: `cli.setup`, `settings.storage_images`, `engine.fstab_check` and
-`engine.verify_dependent`. A synthetic CLI regression exercises existing fstab
-identity/options and verifies configuration-only registration with no OS/storage
-command. Actual target-host options, permissions, consumers and readiness still
-require review; no target-host migration is claimed tested.
+Source: `web_images.mounted_adoption`, `cli.setup`, `settings.storage_images` and
+`engine.dependent_metadata`. Automated adoption checks use disposable ext4 files,
+real probes/configuration locks and simulated mount/loop metadata. Real isolated
+TLS and private-root package tests are separate evidence. Actual target-host image
+adoption and consumer readiness require operator acceptance; no such acceptance
+is claimed by the release tests.

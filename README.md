@@ -1,4 +1,8 @@
-# USB Storage Watch 2.0.1 beta 1 — beta candidate
+# USB Storage Watch 2.0.1 beta 2 — testing prerelease
+
+Beta 2 fixes first-time HTTPS setup and supports reviewed GUI adoption of verified
+already-mounted ext4 images. See [existing-image guidance](docs/EXISTING-IMAGE.md)
+and [validation limits](docs/VALIDATION-CURRENT.md). Companion 0.2.6 is unchanged.
 
 Removable ext4 storage monitoring, guarded recovery and explicitly selected Docker
 application startup. Ordinary folders and optional virtual images are supported.
@@ -69,7 +73,7 @@ the same disk. Keep a working existing installation separate from this package.
 On Ubuntu 24.04, install the downloaded package:
 
 ```sh
-sudo apt install ./usb-storage-watch_2.0.1~beta1_all.deb
+sudo apt install ./usb-storage-watch_2.0.1-beta2_all.deb
 ```
 
 A fresh installation enables the privileged broker, localhost dashboard and boot
@@ -114,7 +118,7 @@ For a headless installation, explicitly suppress GUI activation even when its
 optional dependencies are already installed:
 
 ```sh
-sudo env USB_STORAGE_WATCH_HEADLESS=1 apt install --no-install-recommends ./usb-storage-watch_2.0.1~beta1_all.deb
+sudo env USB_STORAGE_WATCH_HEADLESS=1 apt install --no-install-recommends ./usb-storage-watch_2.0.1-beta2_all.deb
 sudo usb-storage-watch setup
 sudo usb-storage-watch validate
 sudo usb-storage-watch diagnose

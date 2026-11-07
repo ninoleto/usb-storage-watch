@@ -1,8 +1,15 @@
 # Current validation and limits
 
-Beta **2.0.1~beta1**, tag **v2.0.1-beta.1**, carries the verified UI40 runtime.
-Only version metadata, publication documentation and synthetic examples changed.
-Companion remains **0.2.6**, byte-identical. No production deployment is implied.
+Beta **2.0.1~beta2**, tag **v2.0.1-beta.2**, fixes first-time HTTPS and adds reviewed
+GUI adoption of an already-mounted fstab-managed ext4 image. Companion **0.2.6**
+remains byte-identical. No target-host acceptance is implied.
+
+Beta 2 adds real isolated verified TLS and rollback tests (with Beta 1 failure
+reproduction), disposable ext4-file/probe and simulated mount/loop adoption tests,
+configuration/lock/refusal regressions, responsive Chromium status/review checks,
+and private-root fresh/upgrade package validation. Python 3.12 / Flask 3.0.2 are
+tested separately from the Ubuntu development interpreter. No actual drive,
+container, production service or target host is operated by those tests.
 
 | Evidence | Scope |
 | --- | --- |

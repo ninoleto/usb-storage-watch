@@ -1,5 +1,15 @@
 ## UI40 — verified upgrade lifecycle
 
+## 2.0.1 beta 2
+
+- Fix first-time HTTPS preparation when no saved certificate exists, retaining
+  certificate/hostname verification, exact-origin confirmation and rollback.
+- Report network preparation, pending confirmation and failures accurately.
+- Adopt verified, already-mounted fstab ext4 images through GUI review without
+  changing their mounts, fstab, contents or permissions.
+- Publish GitHub-compatible asset names and a matching three-asset checksum manifest.
+- Companion 0.2.6 and recovery behavior unchanged.
+
 - Stop the broker supervisor before its listeners; verify stopped state and
   worker counts before allowing unpack. Refuse failures and incompatible broker
   restart overrides instead of reporting success.

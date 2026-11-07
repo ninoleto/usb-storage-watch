@@ -1,5 +1,5 @@
 Package: usb-storage-watch
-Version: 2.0.1~beta1
+Version: 2.0.1~beta2
 Section: admin
 Priority: optional
 Architecture: all

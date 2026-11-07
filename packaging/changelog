@@ -1,3 +1,13 @@
+usb-storage-watch (2.0.1~beta2) unstable; urgency=high
+
+  * Allow first HTTPS setup to reach the verified proposed listener before a
+    saved certificate exists; report preparing/ready/failed accurately.
+  * Review and adopt verified mounted ext4 images without changing their mount,
+    fstab, contents or permissions. Preserve identity and operation safeguards.
+  * Use GitHub-compatible asset names with matching checksums; Companion unchanged.
+
+ -- USB Storage Watch maintainers <maintainers@example.invalid>  Sat, 07 Nov 2026 12:00:00 +0100
+
 usb-storage-watch (2.0.1~beta1) unstable; urgency=high
 
   * Beta preparation from UI40; runtime logic unchanged. Use synthetic examples

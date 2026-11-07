@@ -176,8 +176,79 @@ def probe(b,path):
         if props.get('TYPE')!='ext4': raise ValueError('This file is not an ext4 filesystem image.')
         b.s.disk_uuid(props.get('UUID',''))
         b.w.superblock(os.pread(fd,1024,1024),props['UUID'],False)
-        return dict(uuid=props['UUID'],inode=info.st_ino,device=info.st_dev,size=info.st_size)
+        return dict(uuid=props['UUID'],inode=info.st_ino,device=info.st_dev,size=info.st_size,
+                    label=props.get('LABEL',''))
     finally: os.close(fd)
+
+
+def mounted_adoption(b, c, data, name, path, observed):
+    """Review an already-mounted fstab image without acquiring or changing mounts."""
+    rows = b.w.read_rows()
+    physical = b.w.verify_main()
+    entries = b.fstab_entries()
+    sources = {path, 'UUID='+observed['uuid'], '/dev/disk/by-uuid/'+observed['uuid']}
+    if observed.get('label'):
+        sources.update(('LABEL='+observed['label'], '/dev/disk/by-label/'+observed['label']))
+    def source(value):
+        value = b.w.unescape_mount(value)
+        if value.startswith(('UUID=', 'LABEL=')):
+            key, identity = value.split('=', 1)
+            return key+'='+identity.strip('\"\'')
+        return value
+    candidates = [f for f in entries if source(f[0]) in sources]
+    if not candidates:
+        return None  # Ordinary existing-image import retains its existing checks.
+    if len(candidates) != 1 or candidates[0][0] != path:
+        raise ValueError('Existing image mount entries are duplicate or ambiguous; nothing was changed.')
+    entry = candidates[0]
+    mount = b.w.unescape_mount(entry[1])
+    b.s.absolute(mount, 'Existing image mountpoint')
+    if (not b.s.below(b.w.MOUNT, mount) or b.w.covers(mount, path)
+            or (data.get('mountpoint') and data['mountpoint'] != mount)):
+        raise ValueError('Keep the verified existing image mountpoint inside this drive.')
+    if entry[2] != 'ext4' or len(entry) > 6 or any(not v.isdigit() for v in entry[4:]):
+        raise ValueError('The existing image needs one valid ext4 fstab entry.')
+    b.s.options(entry[3], loop=True)
+    if sum(b.w.unescape_mount(f[1]) == mount for f in entries) != 1:
+        raise ValueError('Existing image mount entries are duplicate or ambiguous; nothing was changed.')
+    item = dict(name=name, enabled='noauto' not in entry[3].split(','), uuid=observed['uuid'],
+                image=path, mountpoint=mount, fstab_options=entry[3])
+    # Do not traverse the mounted image or enumerate FTP/application contents.
+    parent = rooted(b, str(Path(mount).parent))
+    os.close(parent)
+    mounted = b.w.dependent_metadata(rows, item)
+    if (sum(r['target'] == mount for r in rows) != 1
+            or any(r != mounted and r['dev'] == mounted['dev'] for r in rows)):
+        raise ValueError('The existing image mount is stacked or shared; adoption is ambiguous.')
+    folder = b.w.safe_path(mount, os.makedev(*map(int, mounted['dev'].split(':'))))
+    loops = [v for v in b.w.loop_inventory() if v.get('back-file') == path or
+             (v.get('back-maj:min') == physical and str(v.get('back-ino')) == str(observed['inode']))]
+    if len(loops) != 1:
+        raise ValueError('The existing loop backing identity is missing or ambiguous.')
+    loop = loops[0]
+    if (loop.get('back-file') != path or loop.get('back-maj:min') != physical
+            or int(loop.get('back-ino', -1)) != observed['inode']
+            or observed['device'] != os.makedev(*map(int, physical.split(':')))
+            or int(loop.get('offset', -1)) != 0 or int(loop.get('sizelimit', -1)) != 0
+            or b.w.device_number(loop['name']) != mounted['dev']):
+        raise ValueError('The existing loop file/device/inode, offset or size limit does not match.')
+    aliases = {loop['name'], '/dev/block/'+mounted['dev']}
+    if any(f != entry and source(f[0]) in sources | aliases for f in entries):
+        raise ValueError('Another permanent entry refers to this image; adoption is ambiguous.')
+    configured = b.s.storage_images(c, False)
+    matches = [v for v in configured if any(v[k] == item[k] for k in ('uuid', 'image', 'mountpoint'))]
+    if matches:
+        if len(matches) != 1 or any(matches[0][k] != item[k] for k in ('uuid', 'image', 'mountpoint', 'fstab_options')):
+            raise ValueError('This image conflicts with a saved registration.')
+        item = dict(matches[0])  # Repeat review preserves its name and recovery choice.
+    else:
+        c['images'].append(item)
+    b.s.validate(c)
+    b.cli.drives.validate_shared(b.s, c)
+    proof = dict(mount=b.w.mount_record(mounted), loop=loop,
+                 folder=[folder.st_dev, folder.st_ino, folder.st_uid, folder.st_gid, stat.S_IMODE(folder.st_mode)])
+    return dict(item=item, old=None, observed=observed, size=observed['size'], mode='adopt', config=c,
+                adoption=proof, already_registered=bool(matches))
 
 
 def proposal(b,data):
@@ -210,6 +281,10 @@ def proposal(b,data):
         fs_uuid=str(uuid.uuid4())
     else:
         observed=probe(b,path);fs_uuid=observed['uuid'];size=observed['size']
+        if mode == 'existing':
+            adoption = mounted_adoption(b, c, data, name, path, observed)
+            if adoption is not None:
+                return adoption
     item=dict(name=name,enabled=True,uuid=fs_uuid,image=path,mountpoint=mount,
               fstab_options='loop,nofail,nodev,nosuid,noexec,x-systemd.requires-mounts-for='+b.w.MOUNT)
     other=[v for v in b.s.storage_images(c,False) if not old or v['uuid']!=old['uuid']]
@@ -311,6 +386,14 @@ def plan(b,data):
 
 
 def public(value):
+    if value['mode'] == 'adopt':
+        item = value['item']
+        return dict(item=item, size=value['size'], mode='adopt', token=value['token'],
+                    already_registered=value['already_registered'],
+                    message=('Already registered; existing settings will be kept. ' if value['already_registered'] else 'Register this verified mounted ext4 image. ')+
+                    'Backing file: '+item['image']+'; filesystem UUID: '+item['uuid']+'; mountpoint: '+item['mountpoint']+'. '+
+                    'The mount, fstab entry/options, ownership, permissions and files stay unchanged. No unmount or FTP stop is needed. '+
+                    'Mount on recovery: '+('on' if item['enabled'] else 'off')+'. Monitoring is briefly paused and resumed only if already on.')
     return dict(item=value['item'],size=value['size'],mode=value['mode'],token=value['token'],
                 message=('Create and format only this new image file. Existing disk files will be kept. If monitoring is on, the app will briefly pause and resume it automatically.' if value['mode']=='create' else 'Use the detected ext4 filesystem. Existing image contents will be kept. Monitoring will resume automatically if already on.'))
 
@@ -351,6 +434,29 @@ def _apply(b,chosen,data,outcome):
     with _image_transaction(b) as lock:
         if b.preparation.revision(b)!=chosen['revision']: raise ValueError('Settings changed. Review the image again.')
         current=proposal(b,chosen['data'])
+        if chosen['mode'] == 'adopt':
+            if any(current.get(k) != chosen.get(k) for k in ('mode','item','observed','adoption','already_registered','config')):
+                raise ValueError('Existing image identity or registration changed. Review adoption again.')
+            if not chosen['already_registered']:
+                before = b.configuration()
+                b.cli.save(b.s.STATE_DIR/'image-backups'/(secrets.token_hex(16)+'.json'),
+                           dict(config=before, fstab=b.FSTAB.read_text()))
+                fresh = proposal(b, chosen['data'])
+                if b.preparation.revision(b) != chosen['revision'] or fresh != current:
+                    raise ValueError('Image or mount settings changed before registration. Review again.')
+                try:
+                    b.cli.save(b.s.CONFIG, b.s.validate(current['config']))
+                    if b.configuration() != current['config']:
+                        raise ValueError('Image registration readback did not match; previous settings restored.')
+                except Exception:
+                    b.cli.save(b.s.CONFIG, before)
+                    raise
+            b.w.configure(current['config'])
+            outcome.update(message=('Image already registered; settings preserved.' if chosen['already_registered'] else
+                                    'Existing mounted image registered. Mount, fstab, ownership, permissions and files preserved.'),
+                           registered=True, image_created=False, changed=not chosen['already_registered'],
+                           image=current['item'])
+            return outcome
         if chosen['mode']=='create': current['item']['uuid']=chosen['item']['uuid'];current['config']['images'][-1]['uuid']=chosen['item']['uuid']
         if any(current[k]!=chosen[k] for k in ('item','old','observed','size')): raise ValueError('Image identity changed. Nothing was modified.')
         item=chosen['item'];fd=None;image_created=False;registered=False

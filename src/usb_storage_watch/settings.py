@@ -10,7 +10,7 @@ import re
 import stat
 import uuid
 
-VERSION = '2.0.1~beta4'
+VERSION = '2.0.1~beta5'
 # Each process/module has an immutable drive context. No process-wide selection
 # is changed by dashboard requests. The original profile keeps all DEV7 paths.
 PROFILE = globals().get('PROFILE') or {'id': os.environ.get('USB_STORAGE_WATCH_DRIVE', 'legacy')}

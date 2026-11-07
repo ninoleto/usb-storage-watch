@@ -1,3 +1,12 @@
+usb-storage-watch (2.0.1~beta5) testing; urgency=medium
+
+  * Review eligible Compose project directory and configuration-file access together.
+  * Preserve shared child data; revalidate identities, mounts and locks and report partial outcomes.
+  * Distinguish Portainer product/access metadata from deployment ownership.
+  * Preserve green saved-state badges and Companion 0.2.6.
+
+ -- USB Storage Watch contributors <maintainers@example.invalid>  Sat, 07 Nov 2026 08:00:00 +0100
+
 usb-storage-watch (2.0.1~beta4) unstable; urgency=medium
 
   * Guide Compose permission diagnosis and reviewed single-file adjustments;

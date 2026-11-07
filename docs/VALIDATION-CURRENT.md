@@ -1,35 +1,45 @@
 # Current validation and limits
 
-Beta **2.0.1~beta4**, prepared tag **v2.0.1-beta.4**, improves Docker setup permission
-diagnostics and reviewed adjustments, and marks saved enabled settings with green
-header borders. Companion **0.2.6** and automatic recovery are unchanged.
+Beta **2.0.1~beta5**, prepared tag **v2.0.1-beta.5**, completes reviewed access changes
+for eligible Compose project directories and configuration files. It separately
+corrects Portainer product-label ownership classification. Green saved-state badges,
+Companion **0.2.6**, network behavior and automatic recovery are unchanged.
 
-Focused isolated tests use real temporary file modes, descriptor checks, group
-membership fixtures and actual Compose configuration rendering. Docker responses,
-service control and account/group membership are simulated. They cover shared-group
-files, environment files, exact writable project/ancestor identification, stale
-reviews, identity/ACL/hardlink/bind-mount refusals, competing app locks, permission
-failure/rollback, multiple inputs, source conflicts and partial saves. Erugo-like,
-PhotoPrism-like and Immich-like Compose layouts are exercised. No real containers,
-production permissions or services are operated.
+Focused checks cover a PhotoPrism-like project directory and Compose file writable
+by a shared group containing a synthetic `plex` account, while writable application
+data remains in a child directory. Immich-like project/environment/setgid modes,
+only-necessary write removal, stale confirmations, app locks, other-app data mounts,
+missing inventory, partial restoration/uncertainty and normal settings save are
+covered. Docker/services/account lookup are simulated; temporary Unix permissions,
+descriptor operations and Compose rendering are real. A separate root-only kernel
+fixture drops a child process to disposable numeric credentials: project entry writes
+are removed while child-data creation/rename/read/write continue. No host accounts,
+production permissions, real apps, disks or services are operated.
 
-Real Chromium/localhost HTTP/session/broker checks at **320/768/1440 px** verify
-permission review/confirmation, refused stale requests, unchanged media modes,
-remaining Not configured until save, and green saved badges in expanded/collapsed
-cards. Unknown/off/unsaved settings and recovery locks retain their safeguards.
-Python **3.12.16**, Flask **3.0.2** and a private pure-Python **PyYAML 6.0.3** copy
-are used for compatibility checks; this is not the target's exact dependency set.
-Fresh/upgrade package checks use isolated roots; no live Beta 4 installation or
-Zorin acceptance is claimed. Exact source/payload/module/version/privacy checks
-are part of packaging.
+Chromium at **320/768/1440 px** uses real localhost HTTP/session/broker handlers to
+confirm the combined access plan, stale refusal, retained drafts/child permissions,
+normal explicit save and green collapsed badges. Python **3.12.16**, Flask **3.0.2**
+and private PyYAML **6.0.3** cover compatibility; not the target's exact dependency set.
+Exact payload/source/module/checksum/privacy and private-root fresh/upgrade checks
+are part of packaging, not a live distribution installation or target-host test.
 
-Earlier Beta 3 actual disposable loop-mount/localhost SMTP TLS setup tests and
-Beta 2 verified HTTPS/rollback tests are carried forward, not new Beta 4 hardware
-or network acceptance. The runtime recovery engine and network implementation
-are unchanged by this release. Permission adjustment supports eligible files only;
-directories, ACLs, unsafe ownership/links and known app bind-mounted configuration
-need separate owner review. The target's specific offending ancestor has not been
-identified from the supplied evidence; the new diagnostics must establish it.
+Source inspection distinguishes Portainer's documented product and external
+access-control labels from management evidence. Compose-deployed server/agent
+fixtures pass normal source verification. Explicit management markers stay refused;
+unknown namespace hints or manager-private paths stay unverified. No live Portainer
+control database/API was queried; absence of an external controller is not proven.
+See [Docker setup](DOCKER-SETUP.md) for source references and exact limitations.
+
+Remaining GUI stops: unsafe ancestors outside the project, ACLs/links/ownership,
+account-home/mount/shared-storage roots, direct app-data use, unavailable inventory
+or memberships, missing/non-directory child data sources, and unsupported/ambiguous
+Compose sources or external management. Native services are not fully inventoried;
+the confirmation explains lost directory-entry writes rather than claiming safety
+for native media/FTP consumers. The supplied target-host screenshot did not establish
+numeric modes; only fixture modes are stated. Target acceptance is pending.
+
+Earlier Beta 3 disposable loop-mount/SMTP TLS and Beta 2 verified HTTPS/rollback
+checks are carried forward. No new physical storage/reboot or TLS test is claimed.
 
 | Evidence | Scope |
 | --- | --- |

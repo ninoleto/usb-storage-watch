@@ -83,11 +83,12 @@ def path_diagnostic(path, info, owner, role, problem, chain):
     kind = 'directory' if directory else 'file' if stat.S_ISREG(info.st_mode) else 'symlink' if stat.S_ISLNK(info.st_mode) else 'other'
     affected = [m['name'] for m in group['members'] if m['uid'] not in (0, owner)] if mode & 0o020 else []
     acl = access_acl(path)
-    eligible = (problem == 'shared_write' and kind == 'file' and info.st_uid == owner
-                and info.st_nlink == 1 and info.st_size <= 1024 * 1024 and not mode & 0o7000
+    eligible = (problem == 'shared_write' and info.st_uid == owner
+                and ((kind == 'file' and info.st_nlink == 1 and info.st_size <= 1024 * 1024 and not mode & 0o7000)
+                     or (kind == 'directory' and role == 'project_directory' and not mode & 0o5000 and not path.is_mount()))
                 and acl == 'none' and group['known'])
     limitation = ('Directory permissions affect creating, deleting and renaming other files. '
-                  'Storage Watch will not change this directory or its children. Ask its owner to review shared application/media access.' if directory else
+                  'Only the recorded Compose project directory can be reviewed here, with safe ancestors, no access ACL, and no direct application-data use. This path needs separate owner review.' if directory else
                   'Only an ordinary single-link Compose or environment file owned by the project owner, without an access ACL or special mode bits, can be adjusted here.')
     if problem == 'read_failed':
         limitation = ('The broker cannot read this configuration file. Ask the owner to check filesystem access or security policy. '
@@ -96,9 +97,9 @@ def path_diagnostic(path, info, owner, role, problem, chain):
                 group=group, mode=f'{mode:04o}', problem=problem, acl=acl,
                 hard_links=info.st_nlink if kind == 'file' else None,
                 affected_users=affected, affects_others=bool(mode & 0o002),
-                adjustable=eligible, proposed_mode=f'{mode & ~0o022:04o}' if eligible else None,
+                adjustable=eligible, proposed_mode=f'{mode & ~(0o002 | (0o020 if affected else 0)):04o}' if eligible else None,
                 limitation='' if eligible else limitation,
-                _identity=identity(info, file=True), _owner=owner, _chain=chain)
+                _identity=identity(info, file=True), _owner=owner, _chain=chain, _project=None)
 
 
 def path_issues(path, owner, role='compose_file', project=None):
@@ -126,10 +127,11 @@ def path_issues(path, owner, role='compose_file', project=None):
                'shared_write' if not private_writes(info, owner) else None)
     if problem:
         item = path_diagnostic(path, info, owner, role, problem, chain)
-        if issues and item['adjustable']:
+        if any(not v['adjustable'] for v in issues) and item['adjustable']:
             item.update(adjustable=False, proposed_mode=None,
                         limitation='A parent directory also needs review. No file permission change is offered through an unsafe parent.')
         issues.append(item)
+    for item in issues:item['_project'] = str(project) if project else None
     return issues
 
 
@@ -138,6 +140,9 @@ def check_paths(paths, owner, project):
     for path, role in paths:
         for issue in path_issues(path, owner, role, project): issues.setdefault(issue['path'], issue)
     if issues:
+        for value in issues.values():
+            if value['adjustable'] and any(not v['adjustable'] and Path(v['path']) in Path(value['path']).parents for v in issues.values()):
+                value.update(adjustable=False, proposed_mode=None, limitation='An unsafe ancestor needs separate owner review before this path can be changed.')
         first = next(iter(issues.values()))
         raise Unavailable('Deployment permissions need review: ' + first['path'], issues.values())
 
@@ -146,11 +151,98 @@ def public_diagnostic(value):
     return {k: v for k, v in value.items() if not k.startswith('_')}
 
 
+class AccessFailure(Unavailable):
+    def __init__(self, outcomes):
+        super().__init__('Access changes did not complete. Review each path below before trying again.')
+        self.outcomes = outcomes
+
+
+def adjust_access(values, before_write, progress):
+    """Pin all approved objects first; change only their reviewed write bits."""
+    if not values or len(values) > 32 or any(not v['adjustable'] for v in values):
+        raise Unavailable('These access changes cannot be applied safely.')
+    targets = {v['path']: v for v in values}
+    if len(targets) != len(values): raise Unavailable('Duplicate access target.')
+    expected = {v['path']: dict(v['_identity']) for v in values}
+    descriptors = {}; outcomes = []; attempted = []
+    with ExitStack() as held:
+        for value in values:
+            path = Path(value['path'])
+            parent = os.open('/', os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW | os.O_CLOEXEC)
+            held.callback(os.close, parent)
+            chain = value['_chain']
+            if identity(os.fstat(parent)) != chain[0]['identity']:
+                raise Unavailable('An ancestor changed. Nothing was changed; review again.')
+            # Directory diagnostics include the target in their ancestor chain.
+            for index, part in enumerate(path.parts[1:-1], 1):
+                parent = os.open(part, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW | os.O_CLOEXEC, dir_fd=parent)
+                held.callback(os.close, parent)
+                if identity(os.fstat(parent)) != chain[index]['identity']:
+                    raise Unavailable('An ancestor changed. Nothing was changed; review again.')
+            flags = os.O_RDONLY | os.O_NOFOLLOW | os.O_CLOEXEC | os.O_NONBLOCK
+            if value['type'] == 'directory': flags |= os.O_DIRECTORY
+            fd = os.open(path.name, flags, dir_fd=parent); held.callback(os.close, fd)
+            descriptors[value['path']] = fd
+
+        def verify():
+            for value in values:
+                path = Path(value['path']); wanted = expected[str(path)]
+                if (identity(os.fstat(descriptors[str(path)]), file=True) != wanted
+                        or identity(path.lstat(), file=True) != wanted
+                        or group_access(value['group']['id']) != value['group'] or access_acl(path) != 'none'):
+                    raise Unavailable('A reviewed identity, membership or permission changed.')
+                for item in value['_chain']:
+                    old = item['identity']; applied = expected.get(item['path'])
+                    wanted_parent = {k: applied[k] for k in old} if applied else old
+                    if identity(Path(item['path']).lstat()) != wanted_parent:
+                        raise Unavailable('A reviewed ancestor changed.')
+                for child in value.get('_child_data', []):
+                    if identity(Path(child['path']).stat()) != child['identity']:
+                        raise Unavailable('Known child-data access changed. Review again.')
+
+        verify(); before_write(); verify()
+        try:
+            for value in values:
+                before_write(); verify()
+                path = value['path']; fd = descriptors[path]; attempted.append(value)
+                os.fchmod(fd, int(value['proposed_mode'], 8))
+                now = identity(os.fstat(fd), file=True); old = value['_identity']
+                if (any(now[k] != old[k] for k in old if k not in ('mode', 'changed'))
+                        or now['mode'] != (old['mode'] & ~0o7777 | int(value['proposed_mode'], 8))):
+                    raise Unavailable('Access change readback did not match.')
+                expected[path] = now; verify()
+                outcomes.append(dict(path=path, original=value['mode'], proposed=value['proposed_mode'], status='verified'))
+                progress(outcomes)
+            verify()
+        except Exception:
+            # Restore only objects still matching our pinned identity/readback.
+            # Never chmod a replacement path or blindly restore over concurrent changes.
+            outcomes = []
+            for value in reversed(attempted):
+                path = value['path']; fd = descriptors[path]; old = value['_identity']
+                status = 'uncertain'
+                try:
+                    now = identity(os.fstat(fd), file=True)
+                    unchanged = all(now[k] == old[k] for k in old if k not in ('mode', 'changed'))
+                    named = identity(Path(path).lstat(), file=True) == now
+                    if now == old: status = 'unchanged'
+                    elif (unchanged and named and group_access(value['group']['id']) == value['group']
+                          and access_acl(Path(path)) == 'none'
+                          and stat.S_IMODE(now['mode']) == int(value['proposed_mode'], 8)):
+                        os.fchmod(fd, int(value['mode'], 8))
+                        if stat.S_IMODE(os.fstat(fd).st_mode) == int(value['mode'], 8): status = 'restored'
+                except OSError: pass
+                outcomes.append(dict(path=path, original=value['mode'], proposed=value['proposed_mode'], status=status))
+            outcomes.reverse()
+            outcomes += [dict(path=v['path'], original=v['mode'], proposed=v['proposed_mode'], status='not attempted') for v in values if v not in attempted]
+            raise AccessFailure(outcomes) from None
+
+
 def adjust_permission(value, before_write):
     """One pinned file, remove write bits only. No directory/path arguments from UI."""
     path = Path(value['path']); owner = value['_owner']
     if not value['adjustable']: raise Unavailable('This path cannot be adjusted here.')
-    fresh = path_issues(path, owner, value['role'])
+    fresh = path_issues(path, owner, value['role'], value.get('_project'))
     if len(fresh) != 1 or fresh[0] != value:
         raise Unavailable('Permissions, identity or group membership changed. Review again; nothing was changed.')
     with ExitStack() as held:
@@ -165,10 +257,10 @@ def adjust_permission(value, before_write):
                 raise Unavailable('A parent directory changed. Nothing was changed; review again.')
         fd = os.open(path.name, os.O_RDONLY | os.O_NOFOLLOW | os.O_CLOEXEC | os.O_NONBLOCK, dir_fd=parent)
         held.callback(os.close, fd)
-        if identity(os.fstat(fd), file=True) != value['_identity'] or path_issues(path, owner, value['role']) != [value]:
+        if identity(os.fstat(fd), file=True) != value['_identity'] or path_issues(path, owner, value['role'], value.get('_project')) != [value]:
             raise Unavailable('The reviewed file changed. Nothing was changed; review again.')
         before_write()  # Durable private record before the single metadata change.
-        if identity(os.fstat(fd), file=True) != value['_identity'] or path_issues(path, owner, value['role']) != [value]:
+        if identity(os.fstat(fd), file=True) != value['_identity'] or path_issues(path, owner, value['role'], value.get('_project')) != [value]:
             raise Unavailable('The file or permissions changed before applying. Nothing was changed; review again.')
         mode = int(value['mode'], 8); proposed = int(value['proposed_mode'], 8)
         try:
@@ -179,7 +271,7 @@ def adjust_permission(value, before_write):
                 raise Unavailable('Permission readback changed.')
             if (after.st_size, after.st_mtime_ns) != (value['_identity']['size'], value['_identity']['modified']):
                 raise Unavailable('Configuration contents changed during permission adjustment.')
-            if identity(path.lstat(), file=True) != identity(after, file=True) or path_issues(path, owner, value['role']):
+            if identity(path.lstat(), file=True) != identity(after, file=True) or path_issues(path, owner, value['role'], value.get('_project')):
                 raise Unavailable('The path changed during permission readback.')
         except Exception:
             current = os.fstat(fd)

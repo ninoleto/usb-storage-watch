@@ -1,87 +1,94 @@
-# Guided Docker setup and permissions
+# Guided Docker setup and access review
 
-Computer startup and drive recovery remain independent. Select the actual app,
-choose its drives and optional images, then use **Review changes**. Switches edit
-a draft. **Not configured** stays visible for settings that have never been saved;
-existing saved choices remain authoritative. Green bordered **Startup enabled**
-and **Recovery enabled** badges reflect saved settings, including collapsed cards.
-Unknown reads never become enabled badges. Running/stopped status is separate.
+Startup and recovery remain independent. Select an exact app and its required
+drives/optional images, then **Review changes**. Switches edit a draft. Unsaved
+settings remain **Not configured**. Green bordered **Startup enabled** and
+**Recovery enabled** badges reflect saved settings, including collapsed cards.
+A permission adjustment never saves these settings or restarts/recreates an app.
 
-## When Compose permissions prevent setup
+## Review access changes
 
-The review identifies each known rejected path as a Compose file, environment
-file, project directory or parent directory. The problem may be an ancestor of
-the project, not the project itself. **Technical details** shows the exact owner,
-UID, group/GID, Unix mode, relevant primary/supplementary group members and ACL
-availability. No configuration contents, environment values or credentials are
-returned. Unavailable metadata stays unknown.
+When Compose inputs are writable by other accounts, the review identifies the
+exact project directory, Compose/environment files and any unsafe ancestors.
+Current/proposed numeric modes, affected accounts and group membership are shown.
+Technical ownership, identity and ACL details are expandable; file contents,
+environment values and credentials are never included.
 
-A group writable file is allowed by existing validation only when all known group
-members are the project owner or root. A shared group needs review even when its
-name happens to match the owner's login. This rule is not weakened.
+**Review access changes** combines the eligible project directory and currently
+identified configuration files into one plan. Confirm only the listed changes.
+For example, a fixture directory `0775 → 0755` and file `0664 → 0644` lose group
+write access. These are examples, not assumptions about another host. Only
+necessary group/other write bits are removed; ownership, read/traverse access and
+all child-file/subdirectory permissions remain unchanged. No recursive chmod/chown
+or arbitrary caller-supplied path/mode is accepted. Directory setgid is preserved.
 
-For an eligible file, select **Review file permission change**. The confirmation
-shows one exact path, old/new permissions and the accounts whose write permission
-will be removed. For example, `0664 → 0644` removes group write; `0660 → 0640`
-preserves group read and does not add access for others. The owner/root retain
-access. Decline if another account legitimately needs to generate or edit this
-configuration; coordinate that workflow with its owner instead.
+Removing directory write access prevents affected accounts from **creating,
+deleting or renaming entries directly inside that directory**. Existing writable
+data subdirectories retain their own access. The review lists known Docker data
+subfolders separately. Native services and jobs are not fully inventoried: it does
+not establish that Plex, FTP or another native consumer is unaffected. Confirm only
+when the named accounts do not need those directory-entry/configuration writes.
+If they do, separate deployment configuration from shared data with its owner.
 
-Nothing changes until **Confirm**. The backend checks the pinned container,
-saved selections, recovery/app locks, path components, file identity/mode and group
-membership again. It records the original mode privately, opens the exact file
-without following symlinks, removes only group/other write bits and verifies the
-result. It never uses recursive chmod, chown, a caller-supplied mode or a free-form
-path. A used/stale confirmation cannot be replayed.
+The broker checks the current complete Docker mount inventory and configured USW
+storage, pins all reviewed objects without following symlinks, rechecks memberships,
+metadata, child-data identity and existing app/recovery locks, records original
+modes privately, and changes only the approved paths. A stale confirmation cannot
+be replayed. Each change is read back. Partial failure reports each path as restored,
+unchanged, not attempted or uncertain; rollback never writes a replacement object.
+An uncertain result requires fresh review, not an automatic retry.
 
-The normal Compose/source validation runs again, including ordered overrides and
-the recorded configuration hash. The app review is then refreshed, with the draft
-retained. Permission success does **not** save startup/recovery, change Docker's
-restart policy, restart a container, or claim all setup is complete. Other input
-files may still need their own review. Use **Save settings** only after the normal
-review succeeds. That existing save backs up and edits only the selected service's
-restart policy, verifies Docker's live policy and preserves other settings.
+Normal Compose validation and app review run again with the draft retained. Only
+**Save settings** applies the existing restart-policy/startup/recovery setup.
+Other source/hash/override problems may remain. Configuration files discovered
+only after parsing a now-protected source can need another explicit access review.
+Successful access changes do not claim those later checks passed.
 
-## Supported and refused adjustments
+## Supported limits and remaining GUI stops
 
-The offered adjustment is limited to an ordinary single-link Compose/environment
-file identified from the selected container's deployment, owned by the verified
-project owner, at most 1 MiB, under safe parent directories. There must be no access
-ACL, special mode bits or unresolved group membership. A file inside a known bind
-mount used by the selected app is not offered for adjustment. These checks do not
-claim discovery of every possible native-service consumer.
+An eligible directory is the recorded Compose **project directory**, owned by the
+verified project owner, under safe ancestors, not the account home, a mount root,
+or a configured USW storage location. Ordinary directories and setgid directories
+are supported; access ACLs, sticky/setuid modes and unverifiable identities are not.
+Eligible files remain ordinary single-link Compose/environment files owned by the
+project owner, at most 1 MiB, without access ACLs or special bits.
 
-**Directory permissions are diagnosed but never changed by this workflow.** Group
-write on a directory affects creating, deleting and renaming other entries and
-can be part of legitimate media/application sharing. The review names the exact
-directory and group members; its owner must decide how to protect the deployment
-source while preserving those users. No parent folder, media directory or child
-file is changed implicitly. A file behind an unsafe parent cannot be repaired
-through this workflow until that parent has been reviewed separately.
+The GUI does not change an unsafe ancestor outside the project. It also refuses a
+project/configuration path used directly or through an ancestor as application data,
+including another container's mount. A known child data source must be an existing
+directory; its permissions are checked/preserved. Incomplete Docker inventory,
+unknown memberships, symlinks, hard links, ownership mismatch or unsafe source
+syntax remain specific refusals. No broad media-content scan or native-service
+permission inference is performed. Supported inputs still require normal Compose
+hash consistency and ordered-override validation.
 
-Symlinks, hard links, ownership mismatches, access ACLs, unavailable metadata and
-broker read denials need owner/administrator review. No guessed chmod is offered.
-Unsupported Compose syntax, ambiguous inputs/hash mismatches and externally managed
-deployments remain blocked by the existing validator. Portainer/Swarm/Kubernetes
-ownership is explained; technical commands/instructions are expandable. No
-`compose up`, recreation or deployment-manager bypass is introduced.
+## Deployment ownership
 
-## Partial failure and rollback
+Portainer's `io.portainer.server` and `io.portainer.agent` image labels describe the
+product. They do not establish who deployed it. A Compose-deployed Portainer server
+or agent can therefore use the same verified Compose setup flow. Portainer documents
+`io.portainer.accesscontrol.*` labels for resources deployed outside Portainer;
+those labels alone also do not establish deployment ownership.
 
-A permission change and app settings save are separate confirmed steps. If source
-validation still fails after the mode was verified, the UI reports the successful
-permission change and the remaining setup problem. If an app save partly succeeds,
-only verified saved stages become enabled; unsaved stages stay unconfigured/off.
-No request is automatically replayed after an uncertain response.
+Explicit Portainer stack/edge management markers retain the external-manager
+refusal. Unknown Portainer namespace hints remain **Unverified external management**;
+standard manager-private Compose locations also remain unverified and blocked.
+These heuristics do not query Portainer's control database/API or prove the absence
+of an external controller. Compose source must still be locally identified and
+verified; confirmed Swarm/Kubernetes/Portainer management is never bypassed.
 
-Permission records are private under `docker-setup/<container-id>/permissions-*.json`
-in Storage Watch's state directory. They store identity and the original mode, not
-file contents. A failed permission readback restores only the exact pinned file's
-mode when that rollback is verifiable; uncertain outcomes require review. Normal
-Compose-policy source backups remain separate.
+Source references inspected for this correction:
+[Portainer server Dockerfile](https://github.com/portainer/portainer/blob/develop/build/linux/Dockerfile),
+[agent Dockerfile](https://github.com/portainer/agent/blob/develop/build/linux/Dockerfile),
+[external-resource access labels](https://docs.portainer.io/advanced/access-control),
+[stack source layout](https://github.com/portainer/portainer/blob/develop/api/filesystem/filesystem.go).
 
-Downgrading the package does not undo an explicitly confirmed permission change.
-An administrator can use the private record to review a mode restoration only for
-the same file identity and intended sharing. Do not restore permissions recursively
-or overwrite later app configuration/incident state. All release tests use private
-fixtures; target-host setup acceptance remains an operator task.
+## Private records and rollback
+
+Original identity/modes and per-path outcomes are recorded under
+`docker-setup/<container-id>/permissions-*.json` in private state. Configuration
+contents are not stored in permission records. Existing Compose source/policy
+backups remain separate. Downgrading the package does not undo confirmed access
+changes. Review an original-mode restoration only for the same file/directory and
+intended sharing; never restore permissions recursively or overwrite newer incident
+state. All new acceptance tests use isolated fixtures, not production applications.

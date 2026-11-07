@@ -29,6 +29,7 @@ class Docker:
 
     def request(self, method, path, body=None, **kwargs):
         if method == 'GET':
+            if path == '/containers/json?all=1': return [dict(Id=self.raw['Id'])]
             if self.failure == 'unreadable' and self.updates: raise OSError('synthetic private daemon output')
             return copy.deepcopy(self.raw)
         assert method == 'POST' and path == '/containers/' + IDENTITY + '/update'

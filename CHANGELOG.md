@@ -11,6 +11,18 @@
   badges with a success-green border, including collapsed cards.
 - Companion 0.2.6, recovery engine and existing storage safeguards are unchanged.
 
+## 2.0.1~beta5 — reviewed project access
+
+- One confirmed access plan can remove necessary write bits from an eligible
+  Compose project directory and its configuration files. Child permissions,
+  ownership and read/traverse access are preserved; no recursive changes.
+- Current Docker mounts, shared storage, path identities, memberships and app locks
+  are checked. Private original-mode records and per-path partial outcomes retained.
+- Portainer server/agent image metadata and external access-control labels no longer
+  establish deployment ownership. Explicit management markers remain guarded;
+  unknown hints and manager-private source locations remain unverified/blocked.
+- Green saved enabled badges and normal explicit settings save are unchanged.
+
 ## 2.0.1 beta 3
 
 - Verify registered descendant image mounts during recovery planning instead of

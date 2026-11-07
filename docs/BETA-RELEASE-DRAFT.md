@@ -1,11 +1,11 @@
-# Beta 4 release preparation
+# Beta 5 release preparation
 
-Package/runtime **2.0.1~beta4**, local release tag **v2.0.1-beta.4**.
+Package/runtime **2.0.1~beta5**, local release tag **v2.0.1-beta.5**.
 Companion **0.2.6** is unchanged. The publication repository is a clean export;
 private Git history, host settings, credentials, receipts and logs are excluded.
 Preserve original private checkpoints separately; never push them with `--all` or
 `--mirror`. The authorized public destination is `ninoleto/usb-storage-watch`. Publication requires explicit authorization. Use only
-the sanitized history descending from Beta 3; preserve Beta 1, Beta 2 and Beta 3 and use a prerelease,
+the sanitized history descending from Beta 4; preserve all earlier releases and use a prerelease,
 never the latest/stable release. Verify remote refs and downloaded asset hashes.
 
 Use [BETA-GITHUB-RELEASE.md](BETA-GITHUB-RELEASE.md) as the proposed GitHub body and
@@ -15,15 +15,15 @@ transfer acceptance is explicitly deferred; do not resume password recovery.
 
 Release assets:
 
-- `usb-storage-watch_2.0.1-beta4_all.deb`
-- `usb-storage-watch-2.0.1-beta4.tar.gz` — portable application source/installer,
+- `usb-storage-watch_2.0.1-beta5_all.deb`
+- `usb-storage-watch-2.0.1-beta5.tar.gz` — portable application source/installer,
   including the bundled module; module development source is in the Git tree.
 - `usb-storage-watch-companion-0.2.6.tgz`
 - `SHA256SUMS`
 
 The module SHA256 must remain
 `0640988a2e741099c140b40db32281066d196f3e93eb0af4a4b32b983b250b58`.
-Version ordering is `2.0.0~ui40 < 2.0.1~beta1 < 2.0.1~beta2 < 2.0.1~beta3 < 2.0.1~beta4 < 2.0.1`. Do not rename UI40 artifacts.
+Version ordering is `2.0.0~ui40 < 2.0.1~beta1 < 2.0.1~beta2 < 2.0.1~beta3 < 2.0.1~beta4 < 2.0.1~beta5 < 2.0.1`. Do not rename UI40 artifacts.
 
 Build as an ordinary user with Python 3.10+ and `dpkg-deb`; installer smoke also
 requires `fakeroot` and `systemd-analyze`. Runtime dependencies are declared in
@@ -46,7 +46,7 @@ After reviewing existing storage ownership and making a private backup, install
 only while no storage/recovery operation is active:
 
 ```sh
-sudo apt install ./usb-storage-watch_2.0.1-beta4_all.deb
+sudo apt install ./usb-storage-watch_2.0.1-beta5_all.deb
 ```
 
 A fresh apt installation creates the non-login web account, enables the privileged
@@ -71,7 +71,7 @@ or target-host acceptance from isolated package tests.
 
 ## Developer handoff
 
-Beta 4 changes Docker setup diagnostics, reviewed configuration-file permissions,
+Beta 5 changes Docker setup diagnostics, reviewed project-directory/configuration-file access,
 saved-state UI and badges only. See [DOCKER-SETUP.md](DOCKER-SETUP.md) for supported
 and refused changes. The new authenticated permission routes accept only a pinned
 container identity and session review token/index; no caller-selected path or mode.

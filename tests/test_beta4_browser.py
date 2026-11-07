@@ -64,7 +64,7 @@ def run():
                 page.locator('#modal-root [data-action="confirmed-action"]').tap()
                 page.wait_for_function('(id)=>!dockerView(id).appBusy&&dockerView(id).appPlan?.allowed===true',arg=IDENTITY)
                 expect(badges).to_contain_text('Startup not configured');expect(badges).to_contain_text('Recovery not configured')
-                expect(card.locator('.app-save-status')).to_contain_text('File permissions updated and verified')
+                expect(card.locator('.app-save-status')).to_contain_text('Access changes updated and verified')
                 assert f.source.stat().st_mode&0o777==0o644 and not f.docker.updates and f.media_snapshot()==media
                 assert 'DO-NOT-EXPOSE' not in page.locator('body').inner_text()
                 card.locator('[data-action="app-save"]').tap()

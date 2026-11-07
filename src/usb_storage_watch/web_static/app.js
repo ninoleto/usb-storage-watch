@@ -876,34 +876,39 @@ function permissionDetails(value){
  const owner=value.owner||{},group=value.group||{};
  return `<details class="permission-details"><summary>Technical details</summary><dl><dt>Type</dt><dd>${esc(value.type)}</dd><dt>Owner</dt><dd>${esc(owner.name??'Unknown')} (UID ${esc(owner.uid??'unknown')})</dd><dt>Group</dt><dd>${esc(group.name??'Unknown')} (GID ${esc(group.id??'unknown')})</dd><dt>Permissions</dt><dd>${esc(value.mode??'Unknown')}</dd><dt>Group members</dt><dd>${group.known?(group.members||[]).map(m=>esc(m.name)+' (UID '+esc(m.uid)+')').join(', ')||'None': 'Membership unavailable'}</dd><dt>Access ACL</dt><dd>${esc(value.acl||'unknown')}</dd>${value.hard_links!=null?`<dt>Hard links</dt><dd>${esc(value.hard_links)}</dd>`:''}</dl></details>`;
 }
-function permissionIssues(row,v,p){
- return (p.diagnostics||[]).map((value,index)=>`<section class="permission-issue"><h4>${esc(({compose_file:'Compose file',environment_file:'Environment file',project_directory:'Project directory',parent_directory:'Parent directory'})[value.role]||'Configuration path')}</h4><p><code>${esc(value.path)}</code></p><p>${value.problem==='shared_write'?'Write permission is granted to other accounts. Storage Watch requires protected configuration before setup.':'This path’s ownership, type or file identity needs review before setup.'}</p>${value.problem==='shared_write'?`<p>Write permission: ${esc(permissionAccess(value))}</p>`:''}${value.limitation?`<p>${esc(value.limitation)}</p>`:''}${permissionDetails(value)}${value.adjustable?B('Review file permission change','app-permission',{id:row.id,value:String(index),class:'button-primary',disabled:v.appBusy||!!row.control_block}):''}</section>`).join('');
+function accessPathMarkup(value){
+ return `<section class="permission-issue"><h4>${esc(({compose_file:'Compose file',environment_file:'Environment file',project_directory:'Project directory',parent_directory:'Parent directory'})[value.role]||'Configuration path')}</h4><p><code>${esc(value.path)}</code></p><p>Permissions: <strong>${esc(value.mode??'Unknown')}${value.proposed_mode?' → '+esc(value.proposed_mode):''}</strong></p><p>${value.problem==='shared_write'?'Write permission: '+esc(permissionAccess(value)):'This path’s ownership, type or file identity needs review.'}</p>${value.type==='directory'?'<p>Removing directory write access prevents the affected accounts from creating, deleting or renaming entries directly here. Read/traverse access and child-file permissions stay unchanged.</p>':''}${(value.child_data||[]).map(d=>`<p>Known data subfolder: <code>${esc(d.path)}</code> (${esc(d.app)}). Its own permissions will not change.</p>`).join('')}${value.limitation?`<p>${esc(value.limitation)}</p>`:''}${permissionDetails(value)}</section>`;
 }
-async function reviewAppPermission(id,index){
+function permissionIssues(row,v,p){
+ const values=p.diagnostics||[];
+ return values.map(accessPathMarkup).join('')+(values.some(v=>v.adjustable)?B('Review access changes','app-permission',{id:row.id,class:'button-primary',disabled:v.appBusy||!!row.control_block}):'');
+}
+
+async function reviewAppPermission(id){
  const row=dockerPage.containers.find(r=>r.id===id),v=dockerView(id),p=v.appPlan?.policy;
  if(!row||!p||v.appBusy||appBlocked(id))return;
  const session=csrfToken;v.appBusy=true;v.appError=false;invalidateDockerReads();refreshDockerDOM();
  let review;
- try{review=await apiRequest('docker-permission-plan',{data:{id,name:row.name,token:p.token,index}});}
+ try{review=await apiRequest('docker-permission-plan',{data:{id,name:row.name,token:p.token}});}
  catch(e){if(csrfToken===session){v.appMessage=operationError(e);v.appError=true;}return {message:operationError(e),error:true};}
  finally{if(csrfToken===session){v.appBusy=false;refreshDockerDOM();}}
  if(csrfToken!==session)return;
- confirmAction('Adjust this file’s permissions?',review.message,async()=>{
+ confirmAction('Review access changes',review.message,async()=>{
    if(appBlocked(id))throw Error(appBlocked(id));
-   v.appBusy=true;v.appMessage='Checking and applying the reviewed file permissions…';refreshDockerDOM();
+   v.appBusy=true;v.appMessage='Checking and applying the reviewed access changes…';refreshDockerDOM();
    let result;
    try{
      result=await apiRequest('docker-permission-apply',{data:{id,name:row.name,token:review.token,confirm:true}});
      if(csrfToken!==session)return;
      v.appPlan=null;v.appMessage=result.message;v.appError=!result.ok;closeModal();
-     if(result.ok)toast('File permissions updated and verified.');
+     if(result.ok)toast('Access changes updated and verified.');
    }catch(e){if(csrfToken===session){v.appPlan=null;v.appMessage=operationError(e)+' No request was repeated. Review again to check current permissions.';v.appError=true;}throw e;}
    finally{if(csrfToken===session){v.appBusy=false;refreshDockerDOM();}}
    // Normal app review runs again; permission repair never saves the draft.
    if(result?.ok&&csrfToken===session){await reviewAppSettings(id);v.appMessage=result.message;refreshDockerDOM();}
  },{independent:true,singleUse:true,singleUseMessage:'This permission review has been used. Close this dialog and review the app settings again to inspect current permissions. No request will be repeated.'});
  const dialog=$('#modal-root .modal');if(dialog){dialog.dataset.appId=id;
-   $('.modal-actions',dialog).insertAdjacentHTML('beforebegin',`<div class="permission-review"><p><code>${esc(review.path.path)}</code></p><p>Permissions: <strong>${esc(review.path.mode)} → ${esc(review.path.proposed_mode)}</strong></p><p>Write access removed from: ${esc(permissionAccess(review.path))}. The owner and root retain access.</p>${permissionDetails(review.path)}</div>`);
+   $('.modal-actions',dialog).insertAdjacentHTML('beforebegin',`<div class="permission-review">${review.paths.map(accessPathMarkup).join('')}${review.remaining?.length?'<h4>Not changed by this plan</h4>'+review.remaining.map(accessPathMarkup).join(''):''}</div>`);
  }
  syncAppControlLocks();return {message:'Permission review prepared. No change applied.'};
 }

@@ -86,7 +86,7 @@ class Permissions(Fixture,unittest.TestCase):
         self.assertEqual(self.source.stat().st_mode&0o777,0o644);self.assertEqual(self.source.read_bytes(),contents)
         self.assertEqual(self.current(),settings);self.assertEqual(self.media_snapshot(),before);self.assertEqual(self.docker.raw,raw)
         record=next(self.m.directory(self.b,IDENTITY).glob('permissions-*.json'))
-        self.assertEqual(record.stat().st_mode&0o777,0o600);self.assertEqual(json.loads(record.read_text())['target']['mode'],'0664')
+        self.assertEqual(record.stat().st_mode&0o777,0o600);self.assertEqual(json.loads(record.read_text())['targets'][0]['mode'],'0664')
         with self.assertRaises(ValueError):self.permission_apply(review)
         saved=self.commit(self.review(self.intent()));self.assertTrue(saved['ok'],saved)
         self.assertEqual(self.current()['configured'][IDENTITY],dict(boot=True,recovery=True))
@@ -94,14 +94,14 @@ class Permissions(Fixture,unittest.TestCase):
         self.assertEqual(self.docker.raw['HostConfig']['RestartPolicy']['Name'],'no')
         self.assertIn('restart: always',self.source.read_text());self.assertEqual(self.media_snapshot(),before)
 
-    def test_immich_exact_project_and_ancestor_directory_refused(self):
+    def test_unsafe_ancestor_directory_refused(self):
         self.source.write_text('services:\n  app:\n    image: example.invalid/immich:fixed\n    restart: always\n    depends_on:\n      database: {condition: service_started}\n      redis: {condition: service_started}\n  database:\n    image: example.invalid/postgres:fixed\n  redis:\n    image: example.invalid/redis:fixed\n')
         self.rehash()
-        for folder,role in ((self.project,'project_directory'),(self.root,'parent_directory')):
+        for folder,role in ((self.root,'parent_directory'),):
             original=folder.stat().st_mode&0o777;folder.chmod(0o775);before=self.media_snapshot()
             plan=self.review(self.intent());self.assertFalse(plan['allowed']);issue=plan['policy']['diagnostics'][0]
             self.assertEqual((issue['path'],issue['role'],issue['type']),(str(folder),role,'directory'))
-            self.assertFalse(issue['adjustable']);self.assertIn('application/media',issue['limitation'])
+            self.assertFalse(issue['adjustable']);self.assertIn('separate owner review',issue['limitation'])
             with self.assertRaises(ValueError):self.permission_review(plan)
             self.assertEqual(before,self.media_snapshot());self.assertEqual(self.docker.updates,[])
             folder.chmod(original)  # Fixture owner resolves it; the application never does.

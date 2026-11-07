@@ -15,7 +15,7 @@ import gzip
 import json
 
 ROOT=Path(__file__).resolve().parents[1]
-VERSION='2.0.1~beta2'
+VERSION='2.0.1~beta3'
 # GitHub normalizes '~' in asset names. Keep Debian version ordering internally,
 # but create portable public names and checksums before upload.
 ASSET_VERSION=VERSION.replace('~','-')

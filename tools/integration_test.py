@@ -16,8 +16,8 @@ import tarfile
 import tempfile
 
 ROOT=Path(__file__).resolve().parents[1]
-DEB=ROOT/'dist/usb-storage-watch_2.0.1-beta2_all.deb'
-TAR=ROOT/'dist/usb-storage-watch-2.0.1-beta2.tar.gz'
+DEB=ROOT/'dist/usb-storage-watch_2.0.1-beta3_all.deb'
+TAR=ROOT/'dist/usb-storage-watch-2.0.1-beta3.tar.gz'
 CHECKS=[]
 
 
@@ -80,7 +80,7 @@ def main():
                 assert entry.isfile() and not Path(entry.name).is_absolute() and '..' not in Path(entry.name).parts
                 assert entry.uid==entry.gid==0
                 out=source/entry.name;out.parent.mkdir(parents=True,exist_ok=True);out.write_bytes(archive.extractfile(entry).read())
-        project=source/'usb-storage-watch-2.0.1-beta2'
+        project=source/'usb-storage-watch-2.0.1-beta3'
         passed('portable archive contains only regular safe paths with normalized ownership')
         portable=base/'portable';portable.mkdir()
         tool=project/'tools/install.py'
@@ -98,7 +98,7 @@ def main():
         assert list((portable/'var/lib/usb-storage-watch/backups').iterdir())
         passed('portable upgrade preserves configuration, synthetic credentials and history; backs up program')
         cli=portable/'usr/lib/usb-storage-watch/cli.py'
-        assert '2.0.1~beta2' in run([sys.executable,'-I',cli,'--version'])
+        assert '2.0.1~beta3' in run([sys.executable,'-I',cli,'--version'])
         for command in ('validate','diagnose'): run([sys.executable,'-I',cli,'--root',portable,command])
         passed('installed CLI version, staged validation and staged diagnostics')
         bad=base/'symlink-root';bad.mkdir();(bad/'usr').symlink_to(base/'external')
@@ -134,10 +134,10 @@ def main():
         passed('Debian package installs in private dpkg root with no automatic activation')
         # Build a private next-version archive to exercise dpkg upgrade semantics.
         nexttree=base/'next';run(['dpkg-deb','--raw-extract',DEB,nexttree])
-        controlfile=nexttree/'DEBIAN/control';controlfile.write_text(controlfile.read_text().replace('Version: 2.0.1~beta2','Version: 2.0.1~beta2+test1'))
+        controlfile=nexttree/'DEBIAN/control';controlfile.write_text(controlfile.read_text().replace('Version: 2.0.1~beta3','Version: 2.0.1~beta3+test1'))
         upgrade=base/'private-upgrade.deb';run(['dpkg-deb','--root-owner-group','--build',nexttree,upgrade])
         run([*dpkg,'--install',upgrade],env=env);unchanged(snapshot)
-        assert 'Version: 2.0.1~beta2+test1' in (admin/'status').read_text()
+        assert 'Version: 2.0.1~beta3+test1' in (admin/'status').read_text()
         passed('Debian version upgrade preserves configuration, synthetic credentials and history')
         run([*dpkg,'--remove','usb-storage-watch'],env=env);unchanged(snapshot)
         assert not (debroot/'usr/lib/usb-storage-watch/engine.py').exists()

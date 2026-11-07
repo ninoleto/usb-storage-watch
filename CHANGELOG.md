@@ -1,4 +1,12 @@
-## UI40 — verified upgrade lifecycle
+## 2.0.1 beta 3
+
+- Verify registered descendant image mounts during recovery planning instead of
+  rejecting them solely for being mounted. Keep the actual remount guard strict.
+- Return actionable, sanitized email-setup refusals before changing monitoring
+  or notification settings; keep service failures distinct.
+- Exercise fresh registration, adoption, monitoring, recovery and email setup with
+  disposable actual mounts and localhost SMTP TLS, plus simulated refusal cases.
+- Companion 0.2.6 is unchanged; previous release tags/assets are retained.
 
 ## 2.0.1 beta 2
 
@@ -9,6 +17,8 @@
   changing their mounts, fstab, contents or permissions.
 - Publish GitHub-compatible asset names and a matching three-asset checksum manifest.
 - Companion 0.2.6 and recovery behavior unchanged.
+
+## UI40 — verified upgrade lifecycle
 
 - Stop the broker supervisor before its listeners; verify stopped state and
   worker counts before allowing unpack. Refuse failures and incompatible broker

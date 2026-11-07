@@ -1,3 +1,14 @@
+usb-storage-watch (2.0.1~beta3) unstable; urgency=high
+
+  * Allow recovery planning with freshly verified registered image mounts;
+    retain strict unknown-descendant and actual remount guards.
+  * Explain missing/unreadable SMTP configuration without changing monitoring
+    or masking genuine service failures.
+  * Test the fresh GUI setup sequence with isolated real loop mounts and SMTP TLS.
+    Keep Companion 0.2.6 unchanged.
+
+ -- USB Storage Watch maintainers <maintainers@example.invalid>  Sat, 07 Nov 2026 12:00:00 +0100
+
 usb-storage-watch (2.0.1~beta2) unstable; urgency=high
 
   * Allow first HTTPS setup to reach the verified proposed listener before a

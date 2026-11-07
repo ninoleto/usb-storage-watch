@@ -96,7 +96,9 @@ class MountConflictTests(unittest.TestCase):
         absent=dict(unsafe,unsafe=False,detected=False,detail='Expected device absent.')
         with tempfile.TemporaryDirectory() as folder, mock.patch.object(w,'log'):
             monitor=w.Monitor(Path(folder)/'state.json',now=0,boot='test-boot',application_tracking=False)
-            monitor.sample(unsafe,0,'first');monitor.sample(unsafe,15,'confirmed');monitor.sample(absent,30,'later')
+            monitor.sample(unsafe,0,'2026-01-01T00:00:00+00:00')
+            monitor.sample(unsafe,15,'2026-01-01T00:00:15+00:00')
+            monitor.sample(absent,30,'2026-01-01T00:00:30+00:00')
             self.assertIsNone(monitor.work_request(True,60))
             # A qualified reset may be scheduled while absent, but the earlier
             # unsafe identity reason must still prevent every storage write.

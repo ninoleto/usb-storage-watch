@@ -1,12 +1,13 @@
-# USB Storage Watch 2.0.1 beta 2 — testing prerelease
+# USB Storage Watch 2.0.1 beta 3 — testing prerelease
 
-Beta 2 fixes first-time HTTPS setup and supports reviewed GUI adoption of verified
-already-mounted ext4 images. See [existing-image guidance](docs/EXISTING-IMAGE.md)
+Beta 3 allows recovery activation with verified registered mounted images and
+explains missing or unreadable email settings. It retains Beta 2’s HTTPS and
+reviewed image-adoption fixes. See [existing-image guidance](docs/EXISTING-IMAGE.md)
 and [validation limits](docs/VALIDATION-CURRENT.md). Companion 0.2.6 is unchanged.
 
 Removable ext4 storage monitoring, guarded recovery and explicitly selected Docker
 application startup. Ordinary folders and optional virtual images are supported.
-The prepared source is based on verified UI40; no public beta is released yet.
+The testing prereleases build on verified UI40; see the release validation limits.
 
 See [current validation and limits](docs/VALIDATION-CURRENT.md),
 [release draft](docs/BETA-RELEASE-DRAFT.md), [existing-image handover](docs/EXISTING-IMAGE.md)
@@ -73,7 +74,7 @@ the same disk. Keep a working existing installation separate from this package.
 On Ubuntu 24.04, install the downloaded package:
 
 ```sh
-sudo apt install ./usb-storage-watch_2.0.1-beta2_all.deb
+sudo apt install ./usb-storage-watch_2.0.1-beta3_all.deb
 ```
 
 A fresh installation enables the privileged broker, localhost dashboard and boot
@@ -103,9 +104,15 @@ a token** at localhost and authenticate with a named local administrator. This
 explicit action regenerates the file and revokes earlier tokens/sessions. Linux
 password recovery is unavailable over LAN. There is no default or shared token.
 
-1. Select your USB drive by its name and capacity.
-2. Choose **Automatic recovery**. Configure optional notifications separately in **Email**.
-3. Read the short explanation and click **Start monitoring**.
+1. Register your USB drive by its verified identity, keeping its existing mount.
+2. If needed, adopt an existing mounted image through **Virtual Disk Images**.
+   Ordinary data folders need no image.
+3. Select **Start monitoring**, then review and enable **Automatic recovery**
+   in Manage Drive. Verified registered child image mounts are supported.
+4. Configure and test SMTP in **Email & Notifications**, then enable the drive’s
+   **Email notifications**. Missing/unreadable settings leave monitoring unchanged.
+5. In **Docker Apps**, select exact container identities and independently review
+   startup and recovery drives/images and restart-policy changes.
 
 Existing usable connection settings are kept. The Overview shows current drive
 availability and monitoring status. Change mount location is on Manage Drive. Virtual Disk Images, Docker & Applications, Integrations and Advanced Settings have separate pages. Docker restart settings belong to each detected container; drive and image choices are made by the user. Remote image upload is not offered. See [the web guide](docs/WEB-GUI.md).
@@ -118,7 +125,7 @@ For a headless installation, explicitly suppress GUI activation even when its
 optional dependencies are already installed:
 
 ```sh
-sudo env USB_STORAGE_WATCH_HEADLESS=1 apt install --no-install-recommends ./usb-storage-watch_2.0.1-beta2_all.deb
+sudo env USB_STORAGE_WATCH_HEADLESS=1 apt install --no-install-recommends ./usb-storage-watch_2.0.1-beta3_all.deb
 sudo usb-storage-watch setup
 sudo usb-storage-watch validate
 sudo usb-storage-watch diagnose

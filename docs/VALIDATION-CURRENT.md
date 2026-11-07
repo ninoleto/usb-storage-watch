@@ -1,15 +1,28 @@
 # Current validation and limits
 
-Beta **2.0.1~beta2**, tag **v2.0.1-beta.2**, fixes first-time HTTPS and adds reviewed
-GUI adoption of an already-mounted fstab-managed ext4 image. Companion **0.2.6**
-remains byte-identical. No target-host acceptance is implied.
+Beta **2.0.1~beta3**, tag **v2.0.1-beta.3**, fixes recovery activation with registered
+mounted images and actionable SMTP-setup refusals. Companion **0.2.6** remains
+byte-identical. Beta 2's first-HTTPS and reviewed image-adoption fixes remain.
+No target-host acceptance is implied.
 
-Beta 2 adds real isolated verified TLS and rollback tests (with Beta 1 failure
-reproduction), disposable ext4-file/probe and simulated mount/loop adoption tests,
-configuration/lock/refusal regressions, responsive Chromium status/review checks,
-and private-root fresh/upgrade package validation. Python 3.12 / Flask 3.0.2 are
-tested separately from the Ubuntu development interpreter. No actual drive,
-container, production service or target host is operated by those tests.
+Beta 3 reproduces both failures on unchanged Beta 2. The fresh authenticated setup
+sequence covers physical registration, mounted-image adoption, monitoring,
+recovery activation, SMTP save/test and drive notifications. An isolated mount
+namespace exercises two actual disposable ext4 loop mounts, their kernel/backing
+identities and unchanged fstab/data/permissions. A localhost SMTP TLS sink uses
+certificate verification. Discovery, PAM, service control and Docker are simulated;
+no production service, physical drive or container is operated. This is not a
+real systemd service/boot test. Refusal cases cover unknown/changed topology and
+identities, stale reviews, locks, missing/unreadable/invalid email and distinct
+service errors. Existing Docker/Compose, optional-image, manual-start storage,
+repeated recovery and boot regressions are retained.
+
+Packaged browser checks use real localhost HTTP/session/broker handlers at
+320/768/1440 px. Private-root fresh/upgrade tests preserve configuration/state,
+synthetic credentials and disabled LAN. Python 3.12.16 / Flask 3.0.2 are checked
+separately from the development interpreter, not the target host's exact Python
+patchlevel. Beta 2's real verified HTTPS, rollback and certificate/hostname refusal
+regressions also pass against the package. Source/payload/module checksums match.
 
 | Evidence | Scope |
 | --- | --- |

@@ -608,6 +608,19 @@ def disk_operation(data, *, reviewed=False, lock_fds=()):
         worker.close()
 
 
+def require_notification_settings():
+    # This boundary only reads local SMTP configuration. Do not translate later
+    # monitor/service failures into a missing-email error, or expose file contents.
+    try:
+        return n.load_config()
+    except FileNotFoundError:
+        raise ValueError('Email is not configured. Open Email & Notifications, save your SMTP settings and send a test email, then enable notifications for this drive.') from None
+    except OSError:
+        raise ValueError('Saved email settings cannot be read safely. Open Email & Notifications to review them; an administrator may need to check configuration ownership and permissions. Drive settings and monitoring were not changed.') from None
+    except (ValueError, TypeError, AttributeError):
+        raise ValueError('Saved email settings are invalid. Open Email & Notifications, correct and save your SMTP settings, then test email before enabling drive notifications.') from None
+
+
 def update_options(action, data):
     c = configuration()
     if data.get('revision') != s.digest(c):
@@ -616,7 +629,7 @@ def update_options(action, data):
         if set(data) != {'revision','enabled'} or type(data['enabled']) is not bool:
             raise ValueError('Choose the notification preference for this drive.')
         c['notifications']['enabled']=data['enabled']
-        if data['enabled']: n.load_config()
+        if data['enabled']: require_notification_settings()
     elif action == 'protection-settings':
         if set(data) != {'revision', 'automatic', 'notifications'}:
             raise ValueError('Invalid monitoring settings.')
@@ -626,7 +639,7 @@ def update_options(action, data):
         if data['automatic'] and not c['disk']['fstab_options']:
             raise ValueError('Open Manage Drive to review this disk’s recovery settings first.')
         if data['notifications']:
-            n.load_config()
+            require_notification_settings()
     elif action == 'standby-settings':
         if set(data) != {'revision', 'enabled', 'idle_seconds'}:
             raise ValueError('Invalid standby settings.')

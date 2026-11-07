@@ -1,6 +1,6 @@
 # Registering an existing fstab-managed image
 
-Beta 2 supports **reviewed GUI adoption** of a valid, already-mounted ext4 loop
+Beta 2 introduced **reviewed GUI adoption** of a valid, already-mounted ext4 loop
 image. Registration preserves the backing file, mountpoint, mount, fstab bytes and
 options, ownership, permissions and contents. It does not unmount, format, copy,
 remount or stop FTP. The CLI/configuration path remains available separately.
@@ -20,6 +20,14 @@ remount or stop FTP. The CLI/configuration path remains available separately.
    adoption is a no-op that retains saved names and recovery choices.
 5. Check the registered image's verified status. Select it for each app only when
    required; ordinary-folder apps do not need a virtual image.
+6. After recovery ownership is agreed, start monitoring and review **Automatic
+   recovery** in Manage Drive. Beta 3 accepts verified registered child image
+   mounts while rechecking filesystem UUIDs, loop backing identity and topology.
+   Unknown, stacked, shared or changed mounts still refuse activation. Actual
+   recovery/remount operations retain their separate cleanup and safety guards.
+7. Configure and explicitly test SMTP in **Email & Notifications**, then enable
+   the drive's notifications. Missing or unreadable email settings refuse this
+   preference change without stopping monitoring or saving it.
 
 The existing mount must be unambiguous ext4, read/write and healthy. Paths must be
 normalized, inside the verified physical mount, and free of symlinks. Duplicate
@@ -123,9 +131,10 @@ old watcher/settings. Keep only one recovery owner. Restore the previous USW
 configuration if needed, retaining later incident receipts. The image, fstab and
 data never moved, so no image copy-back is required.
 
-Source: `web_images.mounted_adoption`, `cli.setup`, `settings.storage_images` and
-`engine.dependent_metadata`. Automated adoption checks use disposable ext4 files,
-real probes/configuration locks and simulated mount/loop metadata. Real isolated
-TLS and private-root package tests are separate evidence. Actual target-host image
-adoption and consumer readiness require operator acceptance; no such acceptance
-is claimed by the release tests.
+Source: `web_images.mounted_adoption`, `web_protection.planning_backing`, `cli.setup`,
+`settings.storage_images` and `engine.dependent_metadata`. Automated checks use
+disposable ext4 files, real probes/configuration locks and simulated refusal cases.
+Beta 3 also tests the full setup sequence on actual disposable loop mounts in a
+private mount namespace, with simulated USB discovery and service control.
+Target-host image adoption, recovery and consumer readiness still require operator
+acceptance; no such acceptance is claimed by the release tests.

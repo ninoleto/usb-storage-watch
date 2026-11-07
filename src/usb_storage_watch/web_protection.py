@@ -6,6 +6,8 @@ the changes described by that plan. No unmount, mount, repair or reset runs here
 """
 import copy
 import json
+import os
+from pathlib import Path
 import re
 import secrets
 import subprocess
@@ -26,6 +28,53 @@ def email_revision(path):
         return None
     info = path.stat()
     return [info.st_ino, info.st_size, info.st_mtime_ns, info.st_ctime_ns]
+
+
+def planning_backing(b, c, rows, path, dev, mounted):
+    """Verify registered live images before checking the underlying main target.
+
+    This is configuration planning only. The engine's actual remount guard still
+    rejects *all* descendant mounts until incident cleanup has released them.
+    """
+    children = [r for r in rows if r['target'] != path and b.w.covers(path, r['target'])]
+    if not mounted or not children:
+        return b.w.recovery_backing(rows, path, dev, mounted=mounted), []
+    if b.w.verify_main() != dev:
+        raise b.w.Unsafe('The physical filesystem changed during recovery planning.')
+    configured = b.s.storage_images(c, enabled=False)
+    if any(sum(item['mountpoint'] == r['target'] for item in configured) != 1 for r in children):
+        raise b.w.Unsafe('An unregistered mount is present below the selected drive.')
+    verified = {path: dev}; proof = []
+    for item in configured:  # Parents precede consumers, including disabled images.
+        mounts = [r for r in children if r['target'] == item['mountpoint']]
+        if not mounts:
+            continue
+        row = b.w.dependent_metadata(rows, item)
+        if len(mounts) != 1 or sum(r['dev'] == row['dev'] for r in rows) != 1:
+            raise b.w.Unsafe('A registered image mount is stacked or shared.')
+        backing = b.w.visible_mount(rows, item['image'])
+        if backing is None or verified.get(backing['target']) != backing['dev']:
+            raise b.w.Unsafe('The image backing file is outside its verified parent filesystem.')
+        device = os.makedev(*map(int, backing['dev'].split(':')))
+        info = b.w.safe_path(item['image'], device, directory=False)
+        file_proof = b.w.disk_proof(Path(item['image']), item['uuid'], regular=True)
+        if file_proof.st_dev != device or file_proof.st_ino != info.st_ino or file_proof.st_nlink != 1:
+            raise b.w.Unsafe('The image backing file changed during recovery planning.')
+        b.w.safe_path(item['mountpoint'], os.makedev(*map(int, row['dev'].split(':'))))
+        b.w.verify_dependent(item)  # Fresh UUID, loop backing path/device/inode and offset/size checks.
+        b.w.fstab_check(item['mountpoint'])
+        verified[item['mountpoint']] = row['dev']
+        proof.append(dict(uuid=item['uuid'], mount=b.w.mount_record(row),
+                          backing=[info.st_dev, info.st_ino]))
+    def topology(observed):
+        return sorted((b.w.mount_record(r) for r in observed if b.w.covers(path, r['target'])
+                       or b.w.covers(r['target'], path) or r['dev'] in verified.values()), key=lambda r:r['id'])
+    if topology(b.w.read_rows()) != topology(rows):
+        raise b.w.Unsafe('Storage mounts changed during recovery planning. Refresh and review again.')
+    # Only the exact, verified child rows are omitted from this planning view.
+    # Unknown/nested/foreign mounts above were never removed or disregarded.
+    backing = b.w.recovery_backing([r for r in rows if r not in children], path, dev, mounted=True)
+    return backing, proof
 
 
 def proposal(b, uuid, automatic, allow_active=False):
@@ -70,6 +119,7 @@ def proposal(b, uuid, automatic, allow_active=False):
     except (ValueError, b.w.Unsafe):
         raise Problem('This drive has conflicting connection settings. Choose monitoring only, or review the conflict in Advanced settings.',
                       action='monitor-only') from None
+    storage = []
     try:
         # Includes identity, both read/write flags, ext4 error metadata and
         # duplicates. USB qualification is never a prerequisite for remounting.
@@ -86,7 +136,7 @@ def proposal(b, uuid, automatic, allow_active=False):
             b.w.block_checks(dev, uuid)
             if not row['mountpoint']:
                 b.w.mount_available(rows, path, dev)
-            backing = b.w.recovery_backing(rows, path, dev, mounted=bool(row['mountpoint']))
+            backing, storage = planning_backing(b, c, rows, path, dev, mounted=bool(row['mountpoint']))
             b.w.protected_mount_directory(path, backing, mounted=bool(row['mountpoint']))
             if b.s.storage_images(c):
                 for item in b.s.storage_images(c): b.w.fstab_check(item['mountpoint'])
@@ -96,14 +146,14 @@ def proposal(b, uuid, automatic, allow_active=False):
         raise Problem('The drive’s current location cannot be used safely for recovery. Choose monitoring only, or review location options in Advanced settings.',
                       action='monitor-only') from None
     token = b.s.digest(dict(config=old, fstab=text(b.FSTAB), smtp=email_revision(b.s.SMTP),
-                           row=row, automatic=automatic, proposed=c['disk']))
+                           row=row, automatic=automatic, proposed=c['disk'], storage=storage))
     message = ('Your existing connection settings will be used. Your files stay where they are.' if automatic and not addition else
                'Allow this computer to remember where to reconnect this drive. Your files stay where they are; a missing drive will not prevent startup.' if automatic else
                'Your drive will be watched for problems. It will not be reconnected automatically.')
     return dict(ready=True, token=token, message=message,
                 consent='Activating saves these choices and starts monitoring now and at startup.',
                 change=bool(addition), advanced_enabled=bool(c['usb']['enabled'] or c['docker']['enabled'] or c['dependent']['enabled']),
-                _config=c, _addition=addition, _row=row)
+                _config=c, _addition=addition, _row=row, _storage=storage)
 
 
 def plan(b, uuid, automatic):
@@ -170,7 +220,9 @@ def activate(b, data, start_monitor=True):
                     rows = b.w.read_rows()
                     dev = b.w.device_number('/dev/disk/by-uuid/' + c['disk']['uuid'])
                     mounted = bool(chosen['_row']['mountpoint'])
-                    backing = b.w.recovery_backing(rows, path, dev, mounted=mounted)
+                    backing, storage = planning_backing(b, c, rows, path, dev, mounted=mounted)
+                    if storage != chosen['_storage']:
+                        raise Problem('Image identity changed. Review recovery settings again.', action='review')
                     if not mounted:
                         b.w.protected_mount_directory(path, backing, create=True)
                 if addition:
@@ -183,7 +235,7 @@ def activate(b, data, start_monitor=True):
                 # A desktop mounter may have raced the write. Re-evaluate identity,
                 # current location and all safety observations before saving.
                 fresh = proposal(b, data['uuid'], data['automatic'])
-                if fresh['_config'] != chosen['_config'] or fresh['_row'] != chosen['_row']:
+                if any(fresh[key] != chosen[key] for key in ('_config', '_row', '_storage')):
                     raise Problem('The drive changed while saving. Refresh the drive list.', 'drive-choice', 'refresh')
                 if text(b.s.CONFIG) != before['config'] or text(b.s.SMTP) != before['smtp']:
                     raise Problem('Settings changed while saving. Review your choices again.', 'activate-protection', 'review')

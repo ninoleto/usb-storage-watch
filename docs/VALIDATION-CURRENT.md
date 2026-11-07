@@ -1,28 +1,35 @@
 # Current validation and limits
 
-Beta **2.0.1~beta3**, tag **v2.0.1-beta.3**, fixes recovery activation with registered
-mounted images and actionable SMTP-setup refusals. Companion **0.2.6** remains
-byte-identical. Beta 2's first-HTTPS and reviewed image-adoption fixes remain.
-No target-host acceptance is implied.
+Beta **2.0.1~beta4**, prepared tag **v2.0.1-beta.4**, improves Docker setup permission
+diagnostics and reviewed adjustments, and marks saved enabled settings with green
+header borders. Companion **0.2.6** and automatic recovery are unchanged.
 
-Beta 3 reproduces both failures on unchanged Beta 2. The fresh authenticated setup
-sequence covers physical registration, mounted-image adoption, monitoring,
-recovery activation, SMTP save/test and drive notifications. An isolated mount
-namespace exercises two actual disposable ext4 loop mounts, their kernel/backing
-identities and unchanged fstab/data/permissions. A localhost SMTP TLS sink uses
-certificate verification. Discovery, PAM, service control and Docker are simulated;
-no production service, physical drive or container is operated. This is not a
-real systemd service/boot test. Refusal cases cover unknown/changed topology and
-identities, stale reviews, locks, missing/unreadable/invalid email and distinct
-service errors. Existing Docker/Compose, optional-image, manual-start storage,
-repeated recovery and boot regressions are retained.
+Focused isolated tests use real temporary file modes, descriptor checks, group
+membership fixtures and actual Compose configuration rendering. Docker responses,
+service control and account/group membership are simulated. They cover shared-group
+files, environment files, exact writable project/ancestor identification, stale
+reviews, identity/ACL/hardlink/bind-mount refusals, competing app locks, permission
+failure/rollback, multiple inputs, source conflicts and partial saves. Erugo-like,
+PhotoPrism-like and Immich-like Compose layouts are exercised. No real containers,
+production permissions or services are operated.
 
-Packaged browser checks use real localhost HTTP/session/broker handlers at
-320/768/1440 px. Private-root fresh/upgrade tests preserve configuration/state,
-synthetic credentials and disabled LAN. Python 3.12.16 / Flask 3.0.2 are checked
-separately from the development interpreter, not the target host's exact Python
-patchlevel. Beta 2's real verified HTTPS, rollback and certificate/hostname refusal
-regressions also pass against the package. Source/payload/module checksums match.
+Real Chromium/localhost HTTP/session/broker checks at **320/768/1440 px** verify
+permission review/confirmation, refused stale requests, unchanged media modes,
+remaining Not configured until save, and green saved badges in expanded/collapsed
+cards. Unknown/off/unsaved settings and recovery locks retain their safeguards.
+Python **3.12.16**, Flask **3.0.2** and a private pure-Python **PyYAML 6.0.3** copy
+are used for compatibility checks; this is not the target's exact dependency set.
+Fresh/upgrade package checks use isolated roots; no live Beta 4 installation or
+Zorin acceptance is claimed. Exact source/payload/module/version/privacy checks
+are part of packaging.
+
+Earlier Beta 3 actual disposable loop-mount/localhost SMTP TLS setup tests and
+Beta 2 verified HTTPS/rollback tests are carried forward, not new Beta 4 hardware
+or network acceptance. The runtime recovery engine and network implementation
+are unchanged by this release. Permission adjustment supports eligible files only;
+directories, ACLs, unsafe ownership/links and known app bind-mounted configuration
+need separate owner review. The target's specific offending ancestor has not been
+identified from the supplied evidence; the new diagnostics must establish it.
 
 | Evidence | Scope |
 | --- | --- |

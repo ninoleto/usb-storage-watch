@@ -632,7 +632,17 @@ p.app-recovery-notice{color:#f4cd78;background:#302719;border-left:3px solid #ae
 .docker-header-main{display:flex;flex-direction:column;gap:9px;min-width:0;flex:1}
 .app-saved-indicators{display:flex;flex-wrap:wrap;gap:6px;min-width:0}
 .app-saved-indicator{font-size:12px;font-weight:600;line-height:1.4;padding:4px 8px;border:1px solid #6a849b;border-radius:6px;color:#c9deee;background:#213a53;overflow-wrap:anywhere}
-.app-saved-indicator.off,.app-saved-indicator.unknown{color:#b0becb;background:#23313f;border-color:#4d6071}
+.app-saved-indicator.enabled{border:2px solid var(--green-line);color:var(--text)}
+.app-saved-indicator.off,.app-saved-indicator.unknown,.app-saved-indicator.unconfigured{color:#b0becb;background:#23313f;border-color:#4d6071}
+.app-configuration-status{font-size:13px;color:var(--muted)}
+.permission-issue{margin:14px 0;padding:14px;background:var(--surface-2);border:1px solid var(--line);border-radius:8px;overflow-wrap:anywhere}
+.permission-issue h4{margin:0 0 8px}
+.permission-issue code,.permission-review code{white-space:normal;overflow-wrap:anywhere}
+.permission-issue .button{margin-top:10px;min-height:44px}
+.permission-details{margin-top:10px;font-size:13px}
+.permission-details summary{min-height:44px;display:flex;align-items:center;cursor:pointer}
+.permission-details dl{display:grid;grid-template-columns:auto minmax(0,1fr);gap:6px 12px}
+.permission-details dd{margin:0}
 @media(max-width:390px){.app-saved-indicator{font-size:11px;padding:4px 6px}.docker-header-main{gap:7px}}
 
 /* Public setup text stays complete and selectable on narrow screens. */

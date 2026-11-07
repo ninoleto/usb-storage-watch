@@ -1,3 +1,16 @@
+## 2.0.1 beta 4
+
+- Identify exact Compose/environment files and ancestor directories rejected by
+  permission checks, with ownership, mode and relevant group membership.
+- Offer authenticated one-use reviews to remove group/other write bits from an
+  eligible configuration file. Pin file/container identities, preserve other
+  permissions and media, and rerun normal setup validation before any app save.
+- Explain directory/shared-access and other unsupported cases without guessed
+  permission changes or generic command walls.
+- Keep unsaved startup/recovery visibly Not configured; show saved enabled header
+  badges with a success-green border, including collapsed cards.
+- Companion 0.2.6, recovery engine and existing storage safeguards are unchanged.
+
 ## 2.0.1 beta 3
 
 - Verify registered descendant image mounts during recovery planning instead of

@@ -1,91 +1,83 @@
-# USB Storage Watch 2.0.1 Beta 3
+# USB Storage Watch 2.0.1 Beta 4
 
-Testing prerelease for systemd Linux hosts with removable ext4 storage and
-explicitly selected Docker apps. Ordinary external folders need no virtual image.
+Prepared testing prerelease. This update improves GUI Docker setup and saved
+startup/recovery indicators. Companion **0.2.6** is unchanged.
 
-This release corrects two GUI setup blockers reproduced against Beta 2:
+- Permission diagnostics name the exact Compose/environment file or parent
+  directory, with owner, Unix mode and relevant group membership. Configuration
+  contents and secrets are never included.
+- Eligible files offer **Review file permission change → Confirm**. The review
+  shows the exact mode change and affected writers. Only group/other write bits
+  are removed from that single pinned file; no recursive chmod/chown or parent/
+  media changes. File/container identity, memberships and recovery locks are
+  rechecked. Normal Compose validation and app review then run again.
+- Permission adjustment never restarts/recreates an app or saves its startup/
+  recovery settings. Unsaved settings remain **Not configured**. Existing saved
+  choices are retained, including during partial failure.
+- Saved **Startup enabled** and **Recovery enabled** badges now have a visible
+  success-green border in both expanded and collapsed cards. Off, unknown and
+  unsaved settings do not gain enabled styling.
 
-- **Recovery activation with registered mounted images:** planning freshly checks
-  the physical filesystem, registered image UUID, backing file/device/inode,
-  loop offset/size and mount topology. Verified child image mounts no longer
-  block activation. Unknown, shared, stacked, conflicting or changed mounts still
-  refuse setup. The recovery worker's strict remount guard is unchanged.
-- **Email notification setup:** missing, unreadable or invalid SMTP settings
-  produce sanitized instructions to open **Email & Notifications**. Refusal
-  leaves the drive's settings and monitoring unchanged. Genuine later service
-  failures remain distinct. Valid saved email settings allow notification enabling.
-
-Beta 2's first-HTTPS and reviewed mounted-image adoption fixes remain. Companion
-**0.2.6** is byte-identical; existing buttons need no replacement. Earlier release
-tags/assets are retained. No recovery engine, app-start policy or token changes.
+Directory changes, unsafe ownership, symlinks/hard links, access ACLs, special
+mode bits and known app bind-mounted configuration are not offered for automatic
+repair. The specific affected path and limitation are shown instead. Shared media
+access must be reviewed by its owner. Unsupported Compose sources and external
+managers remain subject to existing safeguards; technical instructions are
+expandable. See [Docker setup](DOCKER-SETUP.md) in the source documentation.
 
 ## Install or upgrade
 
-Download the three package assets and `SHA256SUMS` into one folder, then verify:
+After receiving the three package assets and `SHA256SUMS` in one directory:
 
 ```sh
 sha256sum -c SHA256SUMS
-sudo apt install ./usb-storage-watch_2.0.1-beta3_all.deb
+sudo apt install ./usb-storage-watch_2.0.1-beta4_all.deb
 ```
 
-The internal Debian version is **2.0.1~beta3**, newer than Beta 1 and Beta 2.
-Public filenames use hyphens so GitHub retains the checksum manifest's names.
-The source archive is `usb-storage-watch-2.0.1-beta3.tar.gz`; build from its root
-with `python3 -B tools/build.py`. Apt resolves distribution dependencies.
-Checksums verify bytes; packages are not publisher-signed.
+Internal Debian version: **2.0.1~beta4**, newer than Beta 3. Public asset names use
+hyphens and match the checksum manifest. Source:
+`usb-storage-watch-2.0.1-beta4.tar.gz`; build with `python3 -B tools/build.py`.
+Apt resolves declared dependencies. Packages are unsigned; hashes verify bytes.
 
-Privately back up configuration/state and coordinate existing automation first.
-Install only while storage/recovery is idle. Fresh installation enables the
-broker, localhost dashboard and boot timer. LAN access, drive monitoring/recovery
-and app startup need explicit configuration. Open `http://localhost:8765` and use
-the management-token instructions. Upgrades preserve settings and credentials.
+Privately back up current settings/state and keep the previous installer. Upgrade
+only while storage/recovery is idle. Existing settings, tokens, mounts and app
+selections are preserved. No live install is required to build/test this release.
+Fresh installation enables the broker, localhost dashboard and boot timer;
+monitoring, recovery, LAN listening and app startup remain explicit choices.
 
-For a fresh setup, use the GUI in this order:
+Open Docker Apps, edit the intended startup/recovery selections and **Review
+changes**. Inspect any permission diagnostic; confirm a supported file adjustment
+only if the named accounts should lose write access to that configuration. Then
+review the refreshed setup and **Save settings**. A directory diagnosis requires
+owner review; do not recursively change application/media permissions to bypass it.
 
-1. Register the physical drive and retain its verified existing mount.
-2. If required, adopt its existing mounted image through **Virtual Disk Images**.
-3. Start monitoring, then review and enable **Automatic recovery** in Manage Drive.
-4. Configure SMTP in **Email & Notifications** and send an explicitly requested
-   test there; then enable the drive's **Email notifications**.
-5. Review exact app identities, independent startup/recovery drives and optional
-   images in **Docker Apps**, including Docker/Compose restart-policy ownership.
+## Evidence and limits
 
-Registration/adoption never disables another watcher or adds app dependencies.
-See [image handover guidance](https://github.com/ninoleto/usb-storage-watch/blob/v2.0.1-beta.3/docs/EXISTING-IMAGE.md).
+Isolated tests use actual temporary file permissions/descriptor operations and
+Compose configuration rendering, with simulated Docker, service control and
+accounts/groups. They cover Erugo-like, PhotoPrism-like and Immich-like layouts;
+shared-group files and exact writable ancestors; refusal/stale reviews; preserved
+media; failure/rollback; competing locks; source consistency and successful or
+partial settings saves. Python 3.12 compatibility and affected app/recovery/storage
+regressions are checked. No production Docker or host permission changes occurred.
 
-## Validation and limits
+Real Chromium at 320/768/1440 px uses localhost HTTP, authenticated sessions and
+the broker to exercise the complete permission UI and saved green badges. Package
+validation uses private fresh/upgrade roots and byte/hash/privacy checks. These
+are not Zorin acceptance tests. The exact blocking Immich directory on that host
+has not been established by the supplied evidence; the GUI must identify it.
 
-Both setup failures were reproduced on unchanged Beta 2. Beta 3 tests cover the
-full authenticated setup sequence, preserved settings on refusal, changed/unknown
-image identities and topology, stale reviews and competing operation locks.
-An isolated mount namespace used two real disposable ext4 loop mounts and real
-loop identity checks, preserving fstab, data and permissions. Email setup/testing
-used certificate-verified SMTP TLS confined to localhost. USB discovery, PAM,
-service control and Docker were simulated; no production storage or services
-were operated. Focused Docker policy/Compose, optional-image, manual storage,
-boot and repeated-recovery regressions passed.
+Earlier physical Ubuntu timeout/recovery/reboot and manual-unmount acceptance,
+and earlier isolated TLS/mount tests, are carried forward rather than repeated.
+Automatic recovery, identity/storage safeguards and Companion are unchanged.
+Zorin acceptance and Erugo authenticated transfers remain pending. Native Plex,
+FTP and backup users need their own ownership/shutdown plan; Docker controls do
+not manage them. Direct Docker starts do not enforce Compose dependency ordering.
+The historical intermittent Companion `/api/docker-overview` HTTP 503 remains
+unresolved. Storage Watch is not a general application-crash watchdog.
 
-Chromium tests at 320/768/1440 px used real localhost HTTP, sessions and broker
-handlers, verifying recovery confirmation and missing-email toggle rollback and
-successful retry. Fresh/upgrade checks used private package roots; Python 3.12
-with Flask 3.0.2 was tested. Packaged TLS regressions preserve Beta 2's verified
-HTTPS confirmation/rollback and certificate/hostname rejection. These are
-isolated tests, not a booted target-distribution or production acceptance test.
-
-Prior Ubuntu physical timeout/late-recovery/reboot and operator-reported manual
-unmount/remount/app-start acceptance are carried forward, not repeated. Zorin
-Beta 3 acceptance and Erugo authenticated transfer testing remain **pending**.
-Running/visible files do not prove transfer integrity or arbitrary delayed
-application dependencies; direct Docker starts do not execute Compose ordering.
-
-The historical intermittent Companion **GET /api/docker-overview HTTP 503**
-remains **unresolved**; no cause or fix is claimed. Native Plex, FTP and backup
-users require their own reviewed shutdown/recovery ownership plan; Docker
-controls do not manage native consumers. Software reconnect is not proof of
-power cycling. This is not a general application-crash restart watchdog.
-
-Rollback: retain the prior installer and private configuration/state backup.
-While idle, use apt's explicit downgrade option with the verified prior package.
-Restore configuration only if needed, preserving later receipts. No image data,
-mountpoint or fstab migration is required. Beta 2 retains the two setup limitations
-corrected here; Beta 1 also lacks Beta 2's HTTPS/adoption fixes.
+Rollback while idle uses the retained verified Beta 3 installer with apt's explicit
+`--allow-downgrades` option. Preserve later incident state. A downgrade does not
+undo a separately confirmed permission change; original modes and identities are
+recorded privately for precise owner review. Do not restore permissions recursively.
+Earlier released source/tags/assets and the unchanged Companion archive are retained.

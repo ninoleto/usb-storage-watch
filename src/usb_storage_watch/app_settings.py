@@ -46,7 +46,7 @@ def snapshot(b, items, containers):
         for spec in c['docker']['containers']:
             if spec.get('container_id'): names[spec['container_id']] = spec['name']
     saved_ids = {v['id'] for v in boot['containers']} | set(remembered) | {v['container_id'] for _, c in items for v in c['docker']['containers'] if v.get('container_id')}
-    settings = []
+    settings = []; configured = {}
     for identity, name in names.items():
         startup = next((v for v in boot['containers'] if v['id'] == identity), dict(enabled=False, drives=[]))
         choices = []; enabled = False
@@ -57,7 +57,9 @@ def snapshot(b, items, containers):
                 enabled |= c['docker']['enabled']
         recovery = dict(enabled=enabled, drives=choices) if choices else remembered.get(identity, dict(enabled=False, drives=[]))
         settings.append(dict(id=identity, name=name, boot=normalize(startup), recovery=normalize(recovery)))
-    return dict(revision=b.s.digest([items, boot, remembered]), settings=settings, saved_ids=sorted(saved_ids))
+        configured[identity] = dict(boot=any(v['id'] == identity for v in boot['containers']),
+                                    recovery=bool(choices) or identity in remembered)
+    return dict(revision=b.s.digest([items, boot, remembered]), settings=settings, saved_ids=sorted(saved_ids), configured=configured)
 
 
 def validate(b, desired, items, changed):

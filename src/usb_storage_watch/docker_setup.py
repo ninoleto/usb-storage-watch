@@ -127,7 +127,7 @@ def plan(fleet, data, session):
     docker, _ = module.client(b, items); raw = inspect(docker, identity, name)
     receipt = read(b, identity); owner = manager(raw); current = policy(raw)
     dependencies = storage(b, items, identity, name)
-    compose = None; allowed = True; instructions = []
+    compose = None; allowed = True; instructions = []; diagnostics = []; technical = []
     if receipt.get('phase') in ('intent', 'uncertain'):
         allowed = False; instructions.append('Previous setup outcome is unresolved. Review ' + str(directory(b, identity)) + ' before another policy change.')
     if raw['HostConfig'].get('AutoRemove'):
@@ -139,24 +139,37 @@ def plan(fleet, data, session):
             'Kubernetes': 'This is a Kubernetes-managed container. Pod restartPolicy and its workload controller own startup/recreation. Storage Watch cannot take ownership of this container ID. Keep startup in Kubernetes or explicitly migrate the selected workload to a standalone Docker container before selecting it here.',
             'Portainer': 'Use the authoritative Portainer stack editor or its linked Git source to set restart: "no" on only the selected service, including any override. Do not redeploy for this live change. Then use docker update --restart=no ' + identity + ' and verify the live policy. This app cannot certify Portainer’s external source; setup remains externally managed.'
         }[owner])
+        if owner == 'Portainer':
+            technical.extend(instructions[-1:])
+            instructions[-1] = ('Portainer owns this app’s deployment. Review its selected service in the Portainer stack editor or linked source. '
+                                'Storage Watch cannot verify that external source or complete automatic setup here; technical steps are available below.')
     elif owner == 'Docker Compose':
-        try: compose = b.common.module('compose_setup').preview(raw['Config'].get('Labels') or {}, receipt)
+        editor = b.common.module('compose_setup')
+        try: compose = editor.preview(raw['Config'].get('Labels') or {}, receipt)
         except Exception as exc:
             allowed = False
-            safe = str(exc) if isinstance(exc, b.common.module('compose_setup').Unavailable) else None
-            # Modules are loaded independently; only this module's explicit safe error is exposed.
-            if type(exc).__name__ == 'Unavailable': safe = str(exc)
-            instructions.append(safe or 'Compose files could not be validated safely with the recorded project owner and environment.')
+            safe = str(exc) if isinstance(exc, editor.Unavailable) else None
+            diagnostics = copy.deepcopy(exc.diagnostics) if isinstance(exc, editor.Unavailable) else []
+            # A configuration file also used as app data cannot safely lose its
+            # writers. Docker mount inventory is evidence, never a guessed mapping.
+            for issue in diagnostics:
+                if issue['adjustable'] and any(m.get('Type') == 'bind' and m.get('Source') and
+                        (Path(issue['path']) == Path(m['Source']) or Path(m['Source']) in Path(issue['path']).parents)
+                        for m in raw.get('Mounts', [])):
+                    issue.update(adjustable=False, proposed_mode=None,
+                                 limitation='This file is inside a bind mount used by the app. Its write access needs review with the app owner; no permission change is offered.')
+            instructions.append('Review the exact paths below. App settings have not been saved.' if diagnostics else
+                                safe or 'Compose sources could not be verified. Check the recorded source location and project owner in Advanced details.')
             service = (raw['Config'].get('Labels') or {}).get('com.docker.compose.service', '')
-            if re.fullmatch('[A-Za-z0-9][A-Za-z0-9_.-]*', service):
-                instructions.append('Set services.' + service + '.restart to "no" in the authoritative files, including the last applicable override; validate with docker compose config using the original project, file order and environment. Then update this exact container with docker update --restart=no ' + identity + ' and review setup again. Do not run compose up for this change.')
+            if not diagnostics and re.fullmatch('[A-Za-z0-9][A-Za-z0-9_.-]*', service):
+                technical.append('Authoritative service: services.' + service + '.restart. Validate with docker compose config using the original project, file order and environment. Review setup again after correcting the source; do not run compose up for this change.')
     else:
         instructions.append('No deployment manager is identifiable. The live policy can be verified, but external systemd scripts or another manager must also be configured not to start this container ahead of Storage Watch. External ownership remains unverified.')
     token = secrets.token_hex(24)
     value = dict(id=identity, name=name, token=token, expires=time.monotonic() + 300,
                  before_policy=current, protected=protected(raw), runtime=runtime(raw),
                  manager=owner, compose=compose, storage=dependencies, allowed=allowed,
-                 binding=digest(raw['Config'].get('Labels') or {}))
+                 binding=digest(raw['Config'].get('Labels') or {}), diagnostics=diagnostics)
     session['docker_setup_plan'] = value
     original = receipt.get('original_policy')
     return dict(id=identity, name=name, token=token, allowed=allowed, manager=owner,
@@ -164,7 +177,72 @@ def plan(fleet, data, session):
                 live_change=current != dict(Name='no', MaximumRetryCount=0),
                 compose=compose['public'] if compose else None, storage=dependencies,
                 explanation=EXPLANATION, instructions=instructions, original_policy=original,
+                diagnostics=[b.common.module('compose_setup').public_diagnostic(v) for v in diagnostics], technical=technical,
                 restoration=('Previous policy is saved privately. Disable Storage Watch boot/recovery choices before restoring it; Compose source backups are retained with the setup record.') if original else '')
+
+
+def permission_plan(fleet, data, session):
+    if not isinstance(data, dict) or set(data) != {'id', 'name', 'token', 'index'} or type(data['index']) is not int:
+        raise ValueError('Select a permission problem from the current app review.')
+    validate_target({k:data[k] for k in ('id', 'name')})
+    old = session.get('docker_setup_plan')
+    if (not old or any(old[k] != data[k] for k in ('id', 'name', 'token')) or time.monotonic() > old['expires']
+            or not 0 <= data['index'] < len(old.get('diagnostics', []))):
+        raise ValueError('This review expired. Review app settings again.')
+    target = old['diagnostics'][data['index']]
+    plan(fleet, {k:data[k] for k in ('id', 'name')}, session)
+    current = session['docker_setup_plan']
+    if target not in current['diagnostics'] or not target['adjustable']:
+        raise ValueError('This path changed or cannot be adjusted here. Review the current diagnostics.')
+    token = secrets.token_hex(24)
+    session['docker_permission_plan'] = dict(token=token, expires=time.monotonic()+300, setup=current, target=target)
+    return dict(token=token, id=data['id'], name=data['name'],
+                path=fleet.context().common.module('compose_setup').public_diagnostic(target),
+                message='Remove only the reviewed group/other write access from this one configuration file. '
+                        'Read/execute permissions, ownership, parent directories and media folders stay unchanged. '
+                        'This does not save startup/recovery settings, change Docker policy or restart the app. '
+                        'The original mode is recorded privately. Compose validation will run again afterward.')
+
+
+def permission_apply(fleet, data, session):
+    if not isinstance(data, dict) or set(data) != {'id', 'name', 'token', 'confirm'} or data['confirm'] is not True:
+        raise ValueError('Explicitly confirm the reviewed single-file permission change.')
+    validate_target({k:data[k] for k in ('id', 'name')})
+    value = session.get('docker_permission_plan')
+    if (not value or data['token'] != value['token'] or time.monotonic() > value['expires']
+            or any(data[k] != value['setup'][k] for k in ('id', 'name'))):
+        raise ValueError('The permission review expired. Review again; nothing was changed.')
+    if session.pop('docker_permission_plan', None) is not value:
+        raise ValueError('This review was already used.')
+    session.pop('application_plan', None)  # A permission confirmation never saves the app draft.
+    b = fleet.context(); web = b.common.module('web_docker'); target = value['target']; before = value['setup']
+    with fleet.mutex, b.common.module('app_control').operation(fleet, data['id']):
+        plan(fleet, {k:data[k] for k in ('id', 'name')}, session)
+        current = session['docker_setup_plan']
+        if any(current[k] != before[k] for k in ('protected', 'runtime', 'before_policy', 'storage', 'binding')) or target not in current['diagnostics']:
+            raise ValueError('Container, storage selections, path or permissions changed. Review again; nothing was changed.')
+        path = directory(b, data['id']) / ('permissions-' + secrets.token_hex(12) + '.json')
+        record = dict(id=data['id'], name=data['name'], time=b.w.timestamp(), phase='intent', target=target)
+        def before_write():
+            b.common.module('app_control').require_idle(b, web.records(fleet), data['id'])
+            path.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
+            b.w.atomic_write(path, json.dumps(record, indent=2)+'\n')
+        try:
+            b.common.module('compose_setup').adjust_permission(target, before_write)
+        except Exception as exc:
+            if path.exists():
+                record.update(phase='unconfirmed');b.w.atomic_write(path, json.dumps(record, indent=2)+'\n')
+            message = str(exc) if type(exc).__name__ == 'Unavailable' else 'Permission change could not be confirmed. Review the path before trying again.'
+            raise ValueError(message) from None
+        record.update(phase='verified', verified_at=b.w.timestamp())
+        b.w.atomic_write(path, json.dumps(record, indent=2)+'\n')
+        # Full normal validation runs again, including ordered overrides/hash.
+        # A remaining source issue is not a failed chmod or a completed app setup.
+        reviewed = plan(fleet, {k:data[k] for k in ('id', 'name')}, session)
+        return dict(ok=True, settings_saved=False, review=reviewed,
+                    message='File permissions updated and verified. ' +
+                    ('Compose validation passed. Review and save app settings next.' if reviewed['allowed'] else
+                     'App settings are not configured by this action. Review the remaining setup problem.'))
 
 
 def apply(fleet, data, session):

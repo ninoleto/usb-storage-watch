@@ -513,8 +513,8 @@ async function removeReviewedDrive(review){
 }
 function directMessage(message){modal(`<div class="modal-title">${icon('warning')}<h2 id="modal-title">Confirm operation</h2></div><p>${esc(message)}</p><div class="modal-actions">${B('Cancel','close-modal',{class:'button-neutral'})}${B('Continue','confirmed-action',{class:'button-primary'})}</div>`);}
 let modalAction=null;
-function confirmAction(title,description,fn,{danger=false,independent=false,singleUse=false}={}){
- modalAction=fn;modalAction.independentOfStorage=independent;modalAction.singleUse=singleUse;
+function confirmAction(title,description,fn,{danger=false,independent=false,singleUse=false,singleUseMessage=null}={}){
+ modalAction=fn;modalAction.independentOfStorage=independent;modalAction.singleUse=singleUse;modalAction.singleUseMessage=singleUseMessage;
  modal(`<div class="modal-title">${icon(danger?'warning':'check')}<h2 id="modal-title">${esc(title)}</h2></div><div class="callout ${danger?'danger':'warn'}">${icon(danger?'warning':'check')}<div>${esc(description)}</div></div><div class="modal-actions">${B('Cancel','close-modal',{class:'button-quiet'})}${B('Confirm','confirmed-action',{class:danger?'button-danger':'button-primary'})}</div>`,danger?'danger':'');
 }
 async function runDriveAction(d,kind,approval={}){
@@ -660,7 +660,7 @@ function applyDockerOverview(result,{runtimeSequence=dockerPage.runtimeSequence}
  // A settings read begun before a manual command may update settings, but
  // must not restore an older runtime state over that command's result.
  if(runtimeSequence===dockerPage.runtimeSequence)dockerPage.containers=result.containers;
- dockerPage.settingsStale=false;dockerPage.inventoryOK=result.inventory_ok===true;dockerPage.savedEntryIDs=result.applications?.saved_ids||[];dockerPage.appRevision=result.applications?.revision;dockerPage.boot=result.boot||{settings:[],results:{},revision:null};dockerPage.drives=result.drives;dockerPage.revision=result.revision;dockerPage.observedAt=result.observed_at||null;dockerPage.error=result.error||'';dockerPage.loaded=true;
+ dockerPage.settingsStale=false;dockerPage.inventoryOK=result.inventory_ok===true;dockerPage.savedEntryIDs=result.applications?.saved_ids||[];dockerPage.configured=result.applications?.configured||{};dockerPage.appRevision=result.applications?.revision;dockerPage.boot=result.boot||{settings:[],results:{},revision:null};dockerPage.drives=result.drives;dockerPage.revision=result.revision;dockerPage.observedAt=result.observed_at||null;dockerPage.error=result.error||'';dockerPage.loaded=true;
  for(const row of dockerPage.containers){
    if(!dockerPage.inventoryOK||row.control_block||appBlocked(dockerView(row.id).entryPlan?.target?.id))dockerView(row.id).entryPlan=null;
    if(row.control_block)dockerView(row.id).appPlan=null;
@@ -702,9 +702,15 @@ function dockerControlId(container,drive,suffix){return 'docker-'+encodeURICompo
 function dockerDriveKind(d){return d.kind||((d.media_kind&&knownKind(d.media_kind))||find(d.id)?.kind)||'unknown';}
 function dockerDriveDescription(d){const kind=dockerDriveKind(d);return [readableSize(d.size),({hdd:'Mechanical HDD',ssd:'Solid-state drive',flash:'USB flash drive'})[kind]].filter(Boolean).join(' · ');}
 function appBlocked(id){return dockerPage.containers.find(row=>row.id===id)?.control_block||'';}
-function appSettingIndicators(row){
+function savedAppState(row,kind){
  const v=dockerView(row.id),known=!dockerPage.settingsStale&&!v.appReadError&&!v.appHeaderUnknown;
- return `<span class="app-saved-indicators" id="${dockerControlId(row.id,'','saved-indicators')}" aria-label="Saved app settings">${['boot','recovery'].map(kind=>{const value=known?v.appServer?.[kind]?.enabled:undefined,label=kind==='boot'?'Startup':'Recovery',status=typeof value==='boolean'?(value?'enabled':'off'):'unknown';return `<span class="app-saved-indicator ${status}" data-saved-setting="${kind}">${label} ${status}</span>`;}).join('')}</span>`;
+ const value=known?v.appServer?.[kind]?.enabled:undefined;
+ if(typeof value!=='boolean')return 'unknown';
+ if(dockerPage.configured?.[row.id]?.[kind]===false)return 'unconfigured';
+ return value?'enabled':'off';
+}
+function appSettingIndicators(row){
+ return `<span class="app-saved-indicators" id="${dockerControlId(row.id,'','saved-indicators')}" aria-label="Saved app settings">${['boot','recovery'].map(kind=>{const status=savedAppState(row,kind),label=kind==='boot'?'Startup':'Recovery';return `<span class="app-saved-indicator ${status}" data-saved-setting="${kind}">${label} ${status==='unconfigured'?'not configured':status}</span>`;}).join('')}</span>`;
 }
 function appRecoveryNotice(row){return `<p class="app-recovery-notice" role="status" aria-live="polite" ${row.control_block?'':'hidden'}>${esc(row.control_block||'')}</p>`;}
 function syncAppControlLocks(){
@@ -856,16 +862,55 @@ function appDriveChoices(row,v,kind){
 }
 function appPanel(row,v,kind){
  const boot=kind==='boot',settings=v.appDraft?.[kind]||{enabled:false},id=dockerControlId(row.id,'',kind+'-enabled');
- return `<section class="app-settings-panel ${settings.enabled?'enabled':''}" data-app-panel="${kind}"><h3>${boot?'Computer startup':'Drive failure &amp; recovery'}</h3><label class="app-option" for="${id}"><input id="${id}" class="toggle" type="checkbox" role="switch" data-change="app-enabled" data-kind="${kind}" data-container="${attr(row.id)}" ${settings.enabled?'checked':''} ${row.control_block||v.appBusy||!v.appDraft||v.appReadError?'disabled':''}><strong>${boot?'Start with the computer':'Restart after a drive problem'}</strong></label><p class="small app-panel-description">${boot?'Start this app after the computer turns on, once the selected drives are ready.':'Stop this app if a selected drive fails. Start it again when the drive has recovered.'}</p><h4>${boot?'Wait for these drives':'Drives this app depends on'}</h4><div class="app-drive-list" ${settings.enabled?'':'data-disabled="true"'}>${appDriveChoices(row,v,kind)}</div>${!settings.enabled?'<p class="mini app-off-note">Off. Selections are kept for later.</p>':''}</section>`;
+ return `<section class="app-settings-panel ${settings.enabled?'enabled':''}" data-app-panel="${kind}"><h3>${boot?'Computer startup':'Drive failure &amp; recovery'}</h3><p class="app-configuration-status">${({enabled:'Saved and enabled',off:'Saved and off',unconfigured:'Not configured',unknown:'Saved settings unavailable'})[savedAppState(row,kind)]}</p><label class="app-option" for="${id}"><input id="${id}" class="toggle" type="checkbox" role="switch" data-change="app-enabled" data-kind="${kind}" data-container="${attr(row.id)}" ${settings.enabled?'checked':''} ${row.control_block||v.appBusy||!v.appDraft||v.appReadError?'disabled':''}><strong>${boot?'Start with the computer':'Restart after a drive problem'}</strong></label><p class="small app-panel-description">${boot?'Start this app after the computer turns on, once the selected drives are ready.':'Stop this app if a selected drive fails. Start it again when the drive has recovered.'}</p><h4>${boot?'Wait for these drives':'Drives this app depends on'}</h4><div class="app-drive-list" ${settings.enabled?'':'data-disabled="true"'}>${appDriveChoices(row,v,kind)}</div>${!settings.enabled?'<p class="mini app-off-note">Off. Selections are kept for later.</p>':''}</section>`;
 }
 function appAdvanced(row,v){
  const setup=row.setup||{},plan=v.appPlan?.policy,receipt=dockerPage.boot?.results?.[row.id];
  return `<details class="detail app-advanced" ${v.advanced?'open':''}><summary>Advanced details</summary><p>Docker restart policy: <strong>${esc(policyLabel(setup.policy))}</strong><br>Deployment manager: <strong>${esc(setup.manager||'Unavailable')}</strong></p>${(setup.conflicts||[]).map(t=>`<p class="setup-conflict">${esc(t)}</p>`).join('')}<p>Container ID: <code>${esc(row.id)}</code></p>${setup.compose_source?`<p>Compose source reported by Docker: <code>${esc(setup.compose_source)}</code><br>Service: <code>${esc(setup.compose_service)}</code>. ${setup.source_verified?'Source was verified; changes are checked again on save.':'Source requires validation during review.'}</p>`:''}${plan?.compose?`<p>Validated Compose files, in override order: ${plan.compose.files.map(f=>`<code>${esc(f)}</code>`).join(' → ')}</p>`:''}${setup.original_policy?`<p>Original policy saved for restoration: <strong>${esc(policyLabel(setup.original_policy))}</strong>. Disable Storage Watch startup and recovery before restoring it through Docker. Keep the Compose source consistent; private source backups are retained with the setup record.</p>`:''}<p>This manages computer startup and drive recovery. It is not a general application-crash restart watchdog.</p><p>Computer startup respects later manual stops. Enabled drive recovery may start the app again after a selected drive recovers.</p><p>Virtual images are optional. Ordinary folders work once the correct physical filesystem is mounted; an empty mountpoint directory does not count as ready storage.</p>${dockerPage.boot?.results?.[row.id]?.message?`<p>Startup status: ${esc(dockerPage.boot.results[row.id].message)}</p>`:''}${receipt?.notification?`<p>Startup email: ${esc(receipt.notification)}${receipt.notification_error?' · '+esc(receipt.notification_error):receipt.notification==='failed'?' · No error reason was retained for this earlier attempt.':''}</p>`:''}${(row.warnings||[]).map(t=>`<p>${esc(t)}</p>`).join('')}</details>`;
 }
+function permissionAccess(value){
+ const group=value.group||{},names=value.affected_users||[];
+ return [names.length?'Group '+(group.name||group.id)+': '+names.join(', '):'',value.affects_others?'All other local users':'',group.known===false?'Group membership could not be verified':''].filter(Boolean).join('; ')||'No additional group members were identified.';
+}
+function permissionDetails(value){
+ const owner=value.owner||{},group=value.group||{};
+ return `<details class="permission-details"><summary>Technical details</summary><dl><dt>Type</dt><dd>${esc(value.type)}</dd><dt>Owner</dt><dd>${esc(owner.name??'Unknown')} (UID ${esc(owner.uid??'unknown')})</dd><dt>Group</dt><dd>${esc(group.name??'Unknown')} (GID ${esc(group.id??'unknown')})</dd><dt>Permissions</dt><dd>${esc(value.mode??'Unknown')}</dd><dt>Group members</dt><dd>${group.known?(group.members||[]).map(m=>esc(m.name)+' (UID '+esc(m.uid)+')').join(', ')||'None': 'Membership unavailable'}</dd><dt>Access ACL</dt><dd>${esc(value.acl||'unknown')}</dd>${value.hard_links!=null?`<dt>Hard links</dt><dd>${esc(value.hard_links)}</dd>`:''}</dl></details>`;
+}
+function permissionIssues(row,v,p){
+ return (p.diagnostics||[]).map((value,index)=>`<section class="permission-issue"><h4>${esc(({compose_file:'Compose file',environment_file:'Environment file',project_directory:'Project directory',parent_directory:'Parent directory'})[value.role]||'Configuration path')}</h4><p><code>${esc(value.path)}</code></p><p>${value.problem==='shared_write'?'Write permission is granted to other accounts. Storage Watch requires protected configuration before setup.':'This path’s ownership, type or file identity needs review before setup.'}</p>${value.problem==='shared_write'?`<p>Write permission: ${esc(permissionAccess(value))}</p>`:''}${value.limitation?`<p>${esc(value.limitation)}</p>`:''}${permissionDetails(value)}${value.adjustable?B('Review file permission change','app-permission',{id:row.id,value:String(index),class:'button-primary',disabled:v.appBusy||!!row.control_block}):''}</section>`).join('');
+}
+async function reviewAppPermission(id,index){
+ const row=dockerPage.containers.find(r=>r.id===id),v=dockerView(id),p=v.appPlan?.policy;
+ if(!row||!p||v.appBusy||appBlocked(id))return;
+ const session=csrfToken;v.appBusy=true;v.appError=false;invalidateDockerReads();refreshDockerDOM();
+ let review;
+ try{review=await apiRequest('docker-permission-plan',{data:{id,name:row.name,token:p.token,index}});}
+ catch(e){if(csrfToken===session){v.appMessage=operationError(e);v.appError=true;}return {message:operationError(e),error:true};}
+ finally{if(csrfToken===session){v.appBusy=false;refreshDockerDOM();}}
+ if(csrfToken!==session)return;
+ confirmAction('Adjust this file’s permissions?',review.message,async()=>{
+   if(appBlocked(id))throw Error(appBlocked(id));
+   v.appBusy=true;v.appMessage='Checking and applying the reviewed file permissions…';refreshDockerDOM();
+   let result;
+   try{
+     result=await apiRequest('docker-permission-apply',{data:{id,name:row.name,token:review.token,confirm:true}});
+     if(csrfToken!==session)return;
+     v.appPlan=null;v.appMessage=result.message;v.appError=!result.ok;closeModal();
+     if(result.ok)toast('File permissions updated and verified.');
+   }catch(e){if(csrfToken===session){v.appPlan=null;v.appMessage=operationError(e)+' No request was repeated. Review again to check current permissions.';v.appError=true;}throw e;}
+   finally{if(csrfToken===session){v.appBusy=false;refreshDockerDOM();}}
+   // Normal app review runs again; permission repair never saves the draft.
+   if(result?.ok&&csrfToken===session){await reviewAppSettings(id);v.appMessage=result.message;refreshDockerDOM();}
+ },{independent:true,singleUse:true,singleUseMessage:'This permission review has been used. Close this dialog and review the app settings again to inspect current permissions. No request will be repeated.'});
+ const dialog=$('#modal-root .modal');if(dialog){dialog.dataset.appId=id;
+   $('.modal-actions',dialog).insertAdjacentHTML('beforebegin',`<div class="permission-review"><p><code>${esc(review.path.path)}</code></p><p>Permissions: <strong>${esc(review.path.mode)} → ${esc(review.path.proposed_mode)}</strong></p><p>Write access removed from: ${esc(permissionAccess(review.path))}. The owner and root retain access.</p>${permissionDetails(review.path)}</div>`);
+ }
+ syncAppControlLocks();return {message:'Permission review prepared. No change applied.'};
+}
 function appReview(row,v){
  const plan=v.appPlan;if(!plan)return '';
  const p=plan.policy;
- return `<section class="app-review setup-review" aria-label="Review changes"><h3>Review changes for ${esc(row.name)}</h3>${['boot','recovery'].map(kind=>{const value=plan.settings[kind],label=kind==='boot'?'Computer startup':'Drive failure &amp; recovery';return `<p><strong>${label}: ${value.enabled?'On':'Off'}</strong>${plan.changed.includes(kind)?'':' · unchanged'}<br>${value.enabled?esc(setupStorageSummary(value.drives)):'Saved drive and image selections will be retained.'}</p>`;}).join('')}${plan.changed.includes('boot')&&plan.settings.boot.enabled?'<p class="small">Startup can run during this computer session once storage is ready, unless it already completed or was cancelled this boot.</p>':''}${p?`<p>${p.live_change?'Let Storage Watch control automatic startup by changing Docker’s restart policy from '+esc(policyLabel(p.policy))+' to <strong>no</strong>. This does not restart or recreate the app. The previous policy will be saved for restoration.':'Docker’s restart policy is already <strong>no</strong>; no live policy change is needed.'}</p>${p.compose?`<p>Compose service: <strong>${esc(p.compose.service)}</strong></p>${p.compose.changes?`<p>Only the restart field in <code>${esc(p.compose.file)}</code> will change:</p><pre class="setup-diff">${esc('- restart: '+(p.compose.source_before??'(absent)')+'\n+ restart: '+p.compose.source_after)}</pre><p class="small">The original will be backed up privately. Effective configuration, including overrides, will be validated before and after saving.</p>`:'<p>Effective Compose policy is already no; its source will be verified again on save.</p>'}`:''}${(p.instructions||[]).map(t=>`<p class="setup-instruction">${esc(t)}</p>`).join('')}`:''}<p class="mini">Monitoring and global image-recovery settings are unchanged. These settings do not provide general application-crash recovery.</p>${plan.allowed?B('Save settings','app-save',{id:row.id,class:'button-primary',disabled:v.appBusy||!!row.control_block}):'<p class="inline-status error">Settings have not been applied. Follow the deployment instructions, then review again.</p>'}${B('Back to editing','app-cancel',{id:row.id,class:'button-neutral',disabled:v.appBusy})}</section>`;
+ return `<section class="app-review setup-review" aria-label="Review changes"><h3>Review changes for ${esc(row.name)}</h3>${['boot','recovery'].map(kind=>{const value=plan.settings[kind],label=kind==='boot'?'Computer startup':'Drive failure &amp; recovery';return `<p><strong>${label}: ${value.enabled?'On':'Off'}</strong>${plan.changed.includes(kind)?'':' · unchanged'}<br>${value.enabled?esc(setupStorageSummary(value.drives)):'Saved drive and image selections will be retained.'}</p>`;}).join('')}${plan.changed.includes('boot')&&plan.settings.boot.enabled?'<p class="small">Startup can run during this computer session once storage is ready, unless it already completed or was cancelled this boot.</p>':''}${p?`<p>${p.live_change?'Let Storage Watch control automatic startup by changing Docker’s restart policy from '+esc(policyLabel(p.policy))+' to <strong>no</strong>. This does not restart or recreate the app. The previous policy will be saved for restoration.':'Docker’s restart policy is already <strong>no</strong>; no live policy change is needed.'}</p>${p.compose?`<p>Compose service: <strong>${esc(p.compose.service)}</strong></p>${p.compose.changes?`<p>Only the restart field in <code>${esc(p.compose.file)}</code> will change:</p><pre class="setup-diff">${esc('- restart: '+(p.compose.source_before??'(absent)')+'\n+ restart: '+p.compose.source_after)}</pre><p class="small">The original will be backed up privately. Effective configuration, including overrides, will be validated before and after saving.</p>`:'<p>Effective Compose policy is already no; its source will be verified again on save.</p>'}`:''}${permissionIssues(row,v,p)}${(p.instructions||[]).filter(t=>!t.includes('docker ')).map(t=>`<p class="setup-instruction">${esc(t)}</p>`).join('')}${[...(p.technical||[]),...(p.instructions||[]).filter(t=>t.includes('docker '))].length?`<details class="permission-details"><summary>Technical setup details</summary>${[...(p.technical||[]),...(p.instructions||[]).filter(t=>t.includes('docker '))].map(t=>`<p>${esc(t)}</p>`).join('')}</details>`:''}`:''}<p class="mini">Monitoring and global image-recovery settings are unchanged. These settings do not provide general application-crash recovery.</p>${plan.allowed?B('Save settings','app-save',{id:row.id,class:'button-primary',disabled:v.appBusy||!!row.control_block}):'<p class="inline-status error">Settings have not been saved. Resolve the setup issue shown above, then review again.</p>'}${B('Back to editing','app-cancel',{id:row.id,class:'button-neutral',disabled:v.appBusy})}</section>`;
 }
 function dockerCardBody(row,v){
  return `<fieldset class="app-control-fields" ${row.control_block?'disabled':''} aria-label="App controls">${dockerControls(row,v)}<div class="app-settings-grid">${appPanel(row,v,'boot')}${appPanel(row,v,'recovery')}</div>${appAdvanced(row,v)}<div class="docker-card-footer">${v.appConflict?`<p class="inline-status error">Settings changed elsewhere. Your draft is retained. ${B('Reload saved settings','docker-reload',{id:row.id,class:'button-neutral'})}</p>`:''}${row.discovered===false?'<p class="mini">This saved app is not currently detected. Automatic settings can still be turned off.</p>':''}${!v.appPlan?B('Review changes','app-review',{id:row.id,class:'button-docker-save',disabled:!!row.control_block||!appDirty(v)||v.appBusy||v.appConflict||!!v.appReadError}):''}${appReview(row,v)}<p class="inline-status app-save-status ${v.appError||v.appReadError?'error':''}" role="status" aria-live="polite">${esc(v.appBusy?'Working…':v.appMessage||v.appReadError||(appDirty(v)?'Changes are not saved yet.':''))}</p></div></fieldset>`;
@@ -1133,6 +1178,7 @@ async function act(action,id,value,context=null){
  case 'entry-remove':await reviewEntry(id,'remove');return;
  case 'entry-apply':await applyEntry(id);return;
  case 'entry-cancel':dockerView(id).entryPlan=null;dockerView(id).entryMode=null;refreshDockerDOM();return;
+ case 'app-permission':return await reviewAppPermission(id,Number(value));
  case 'app-review':await reviewAppSettings(id);return;
  case 'app-save':await saveAppSettings(id);return;
  case 'app-cancel':dockerView(id).appPlan=null;refreshDockerDOM();return;
@@ -1159,7 +1205,7 @@ async function act(action,id,value,context=null){
        if(context?.uncertain||fn.singleUse){const confirm=$('[data-action="confirmed-action"]',original);if(confirm){confirm.dataset.baseDisabled='true';confirm.disabled=true;}}
        if(fn.singleUse){
          const note=document.createElement('p');note.className='callout warn';note.setAttribute('role','status');
-         note.textContent='This confirmation has been used. Close this dialog, check the current drive and app status, then choose Unmount safely to review again. No request will be repeated automatically.';
+         note.textContent=fn.singleUseMessage||'This confirmation has been used. Close this dialog, check the current drive and app status, then choose Unmount safely to review again. No request will be repeated automatically.';
          $('.modal-actions',original)?.before(note);
          const close=$('[data-action="close-modal"]',original);if(close)close.textContent='Close';
        }

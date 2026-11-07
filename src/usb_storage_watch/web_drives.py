@@ -10,7 +10,7 @@ import uuid
 GLOBAL = {'login','login-info','logout','session','management-token','smtp','test-email',
           'network','lan-auto','lan-info','lan-status','local-accounts','global-config',
           'network-state','network-stage','network-confirm','network-cancel','network-certificate','network-renew'}
-FLEET = {'docker-overview','docker-container-settings','docker-container-action','docker-boot-settings','docker-setup-plan','docker-setup-apply','docker-app-plan','docker-app-save','docker-entry-plan','docker-entry-apply','fleet-status','add-drive','fleet-events','notification-preferences',
+FLEET = {'docker-overview','docker-container-settings','docker-container-action','docker-boot-settings','docker-setup-plan','docker-setup-apply','docker-permission-plan','docker-permission-apply','docker-app-plan','docker-app-save','docker-entry-plan','docker-entry-apply','fleet-status','add-drive','fleet-events','notification-preferences',
          'remove-drive-plan','remove-drive',
          'drive-rebind-candidates','drive-rebind-plan','drive-rebind-apply',
          'prepare-disks','prepare-drive-plan','prepare-drive','prepare-progress'}
@@ -243,7 +243,7 @@ class Fleet:
             raise ValueError('Invalid request.')
         if action in GLOBAL:return None
         session=self.broker.sessions.check(request.get('token'),request.get('csrf'),request.get('write'))
-        if action in ('docker-overview', 'docker-container-settings', 'docker-container-action', 'docker-boot-settings', 'docker-setup-plan', 'docker-setup-apply', 'docker-app-plan', 'docker-app-save', 'docker-entry-plan', 'docker-entry-apply'):
+        if action in ('docker-overview', 'docker-container-settings', 'docker-container-action', 'docker-boot-settings', 'docker-setup-plan', 'docker-setup-apply', 'docker-permission-plan', 'docker-permission-apply', 'docker-app-plan', 'docker-app-save', 'docker-entry-plan', 'docker-entry-apply'):
             if identifier is not None: raise ValueError('Docker settings are global; do not select a drive route.')
             module=b.common.module('web_docker')
             if action == 'docker-overview':
@@ -256,6 +256,9 @@ class Fleet:
             if action in ('docker-app-plan', 'docker-app-save'):
                 editor=b.common.module('app_settings')
                 return dict(status=200, data=(editor.plan if action=='docker-app-plan' else editor.save)(self, request.get('data', {}), session))
+            if action in ('docker-permission-plan', 'docker-permission-apply'):
+                setup=b.common.module('docker_setup')
+                return dict(status=200, data=(setup.permission_plan if action=='docker-permission-plan' else setup.permission_apply)(self, request.get('data', {}), session))
             if action in ('docker-setup-plan', 'docker-setup-apply'):
                 setup=b.common.module('docker_setup')
                 return dict(status=200, data=(setup.plan if action=='docker-setup-plan' else setup.apply)(self, request.get('data', {}), session))

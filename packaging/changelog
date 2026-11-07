@@ -1,3 +1,12 @@
+usb-storage-watch (2.0.1~beta4) unstable; urgency=medium
+
+  * Guide Compose permission diagnosis and reviewed single-file adjustments;
+    preserve strict validation, shared media, container identity and recovery locks.
+  * Distinguish unsaved settings and show green borders for saved enabled badges.
+  * Keep Companion 0.2.6 and automatic recovery unchanged.
+
+ -- USB Storage Watch maintainers <maintainers@example.invalid>  Sat, 07 Nov 2026 12:00:00 +0100
+
 usb-storage-watch (2.0.1~beta3) unstable; urgency=high
 
   * Allow recovery planning with freshly verified registered image mounts;

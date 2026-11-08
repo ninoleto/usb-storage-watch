@@ -1,6 +1,8 @@
 # USB Storage Watch 2.0.1 beta 5 — testing prerelease
 
-Beta 5 offers one reviewed access plan for eligible Compose project directories
+Beta 6 candidate adds guarded mounted HDD standby and per-container I/O diagnostics.
+Apps stay running; see [HDD standby](docs/HDD-STANDBY.md) for capabilities and
+hardware acceptance still required. It also offers one reviewed access plan for eligible Compose project directories
 and their configuration files, preserving child-data permissions. Portainer product
 metadata is distinguished from deployment-management evidence. Green saved-state
 badges and Companion 0.2.6 are unchanged. See [Docker setup](docs/DOCKER-SETUP.md)
@@ -75,7 +77,7 @@ the same disk. Keep a working existing installation separate from this package.
 On Ubuntu 24.04, install the downloaded package:
 
 ```sh
-sudo apt install ./usb-storage-watch_2.0.1-beta5_all.deb
+sudo apt install ./usb-storage-watch_2.0.1-beta6_all.deb
 ```
 
 A fresh installation enables the privileged broker, localhost dashboard and boot
@@ -126,7 +128,7 @@ For a headless installation, explicitly suppress GUI activation even when its
 optional dependencies are already installed:
 
 ```sh
-sudo env USB_STORAGE_WATCH_HEADLESS=1 apt install --no-install-recommends ./usb-storage-watch_2.0.1-beta5_all.deb
+sudo env USB_STORAGE_WATCH_HEADLESS=1 apt install --no-install-recommends ./usb-storage-watch_2.0.1-beta6_all.deb
 sudo usb-storage-watch setup
 sudo usb-storage-watch validate
 sudo usb-storage-watch diagnose

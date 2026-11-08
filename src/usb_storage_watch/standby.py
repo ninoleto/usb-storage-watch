@@ -1,11 +1,16 @@
 # SPDX-License-Identifier: MIT
 """Guarded HDD standby. Routine observation reads kernel metadata only."""
 import json
+import importlib.util
 import os
 from pathlib import Path
 import re
 import subprocess
 import time
+
+_spec = importlib.util.spec_from_file_location('drive_activity', Path(__file__).with_name('drive_activity.py'))
+io = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(io)
 
 SAMPLES = {}
 SYS_DEV_BLOCK = Path('/sys/dev/block')
@@ -53,8 +58,8 @@ def identity(w):
 
 def activity(binding):
     fields = [int(v) for v in (Path(binding['sys']) / 'stat').read_text().split()]
-    if len(fields) < 11:
-        raise ValueError('Incomplete block activity counters')
+    if len(fields) < 17:
+        raise ValueError('Complete read/write/discard/flush counters are unavailable; standby cannot be verified safely.')
     # Ignore time-in-queue counters; include reads, writes, discards and flushes.
     return fields[:8] + fields[11:], fields[8]
 
@@ -71,7 +76,7 @@ def filesystems(w, binding):
 
 
 def users(w, binding, docker=True):
-    """Find live file users, mmap and Docker binds without walking the disk."""
+    """Strict unmount/removal guard. Standby deliberately does not call this."""
     devices, roots = filesystems(w, binding)
     for proc in Path('/proc').iterdir():
         if not proc.name.isdigit() or int(proc.name) == os.getpid():
@@ -121,7 +126,7 @@ def users(w, binding, docker=True):
             for container in containers:
                 if any(any(w.covers(root, m.get('Source', '')) for root in roots)
                        for m in container.get('Mounts', [])):
-                    raise refusal(w, 'busy', 'A running Docker container has access to this disk. Stop it before standby or unmount.')
+                    raise refusal(w, 'busy', 'A running Docker container has access to this disk. Stop it before unmounting or changing storage.')
         except (w.apps.AppError, KeyError, TypeError):
             raise w.Unsafe('Docker access could not be checked; operation refused.') from None
 
@@ -143,9 +148,13 @@ def power_command(w, flag, path):
     return result.stdout
 
 
-def settle_manual(w, binding):
+def settle_manual(w, binding, topology=None):
     """Allow pending writes to settle after sync, with a bounded quiet window."""
+    observed = io.capture(w, topology) if topology else None
     before, inflight = activity(binding)
+    initial = before
+    images = io.loop_activity(topology) if topology else []
+    started = time.monotonic()
     deadline = time.monotonic() + 15
     quiet_since = time.monotonic() if not inflight else None
     while time.monotonic() < deadline:
@@ -154,18 +163,33 @@ def settle_manual(w, binding):
             raise refusal(w, 'unavailable', 'Disk connection changed while waiting for pending writes.')
         if not w.snapshot()['healthy']:
             raise refusal(w, 'unavailable', 'The expected filesystem is no longer mounted read/write.')
+        if topology is not None and io.topology(w, binding) != topology:
+            raise refusal(w, 'unavailable', 'Mount or dependent image identity changed during standby preparation.')
         counters, inflight = activity(binding)
         now = time.monotonic()
         if now > deadline:
             break
-        if inflight:
+        next_images = io.loop_activity(topology) if topology else []
+        if inflight or any(v[2] for v in next_images):
             quiet_since = None
-        elif counters != before or quiet_since is None:
+        elif counters != before or next_images != images or quiet_since is None:
             quiet_since = now
         before = counters
+        images = next_images
         if quiet_since is not None and now - quiet_since >= 3:
             return counters, 0
-    raise refusal(w, 'busy', 'Disk activity did not settle within 15 seconds after flushing writes; standby was not sent. Close applications using this drive and try again.')
+    detail = ''
+    if topology and len(initial)>=7:
+        try:
+            last=io.capture(w, topology)
+            after, pending=activity(binding)
+            report=io.report(observed,last,binding,topology,initial,after,time.monotonic()-started)
+            names=[v['name'] for v in report['containers'] if v['state']=='observed activity']
+            detail=f" Read {report['read_bytes_per_second']:.0f} B/s, write {report['write_bytes_per_second']:.0f} B/s; {pending} requests in flight."
+            detail+=(' Observed container I/O: '+', '.join(names)+'.') if names else ' Source not attributed; filesystem/background work may be responsible.'
+        except (OSError, ValueError, KeyError, w.Unsafe):
+            detail=' Activity source measurement unavailable.'
+    raise refusal(w, 'busy', 'Disk activity did not settle within 15 seconds after flushing writes; standby was not sent.'+detail+' Wait for I/O to finish and try again.')
 
 
 def sleep(w, *, manual=False):
@@ -178,41 +202,21 @@ def sleep(w, *, manual=False):
         return 'HDD standby remains confirmed; no new block I/O has occurred.'
     if storage_kind(w,binding) != 'mechanical':
         raise refusal(w, 'unsupported', 'Mechanical HDD standby is not supported or not established by passive metadata; standby refused.')
-    users(w, binding)
-    _, targets = filesystems(w, binding)
-    for target in sorted(set(targets)):
-        # -M refuses a vanished mount; never use -k or signal filesystem users.
-        # psmisc fuser does not accept GNU's "--" terminator. Paths are
-        # absolute mount targets, never command options.
-        if not target.startswith('/'):
-            raise w.Unsafe('Filesystem mount location is not absolute.')
-        probe = subprocess.run(['/usr/bin/fuser', '-m', '-M', target],
-                               capture_output=True, text=True, timeout=5,
-                               check=False, pass_fds=w.WORKER_LOCK_FDS)
-        if probe.returncode == 0:
-            raise refusal(w, 'busy', 'Filesystem has active users; HDD standby deferred.')
-        if probe.returncode != 1 or probe.stderr.strip() or probe.stdout.strip():
-            raise refusal(w, 'failed', 'Filesystem users could not be checked safely (fuser failed).')
-    if not manual:
-        before, inflight = activity(binding)
-        if inflight:
-            raise refusal(w, 'busy', 'Disk I/O is in progress; standby deferred.')
-        time.sleep(3)  # Only in this supervised action, never in routine monitoring.
-        if identity(w) != binding:
-            raise refusal(w, 'unavailable', 'Disk connection changed during the idle check.')
-        if not w.snapshot()['healthy']:
-            raise refusal(w, 'unavailable', 'The expected filesystem is no longer mounted read/write.')
-        if activity(binding) != (before, 0):
-            raise refusal(w, 'busy', 'Disk activity changed during the three-second idle check.')
-        users(w, binding)
-    # A manual request bypasses the configured idle timer. Flush first so our
-    # own pending filesystem writes do not make that request fail immediately.
-    for target in sorted(set(targets), key=len, reverse=True):
+    topology = io.topology(w, binding)
+    io.swap_guard(w, topology)
+    # Flush dependent image filesystems before their backing physical filesystem,
+    # including images mounted elsewhere. No consumer scan: idle handles are safe.
+    for target in topology['targets']:
+        if identity(w)!=binding or io.topology(w,binding)!=topology:
+            raise refusal(w, 'unavailable', 'Drive identity or mounts changed before flush.')
         w.command(['/usr/bin/sync', '-f', '--', target], timeout=15)
-    after_flush, inflight = settle_manual(w, binding) if manual else activity(binding)
-    users(w, binding)
-    if identity(w) != binding:
-        raise refusal(w, 'unavailable', 'Disk connection changed before standby.')
+    after_flush, inflight = settle_manual(w, binding, topology)
+    quiet_images = io.loop_activity(topology)
+    if any(v[2] for v in quiet_images):
+        raise refusal(w, 'busy', 'Dependent image I/O is pending; standby deferred.')
+    io.swap_guard(w, topology)
+    if identity(w) != binding or io.topology(w,binding)!=topology or not w.snapshot()['healthy']:
+        raise refusal(w, 'unavailable', 'Disk connection or mounts changed before standby.')
     if inflight or activity(binding) != (after_flush, 0):
         raise refusal(w, 'busy', 'Disk activity changed; standby deferred.')
     fd = os.open(binding['path'], os.O_RDONLY | os.O_CLOEXEC)
@@ -220,19 +224,26 @@ def sleep(w, *, manual=False):
     try:
         if identity(w) != binding or w.device_number('/proc/self/fd/' + str(fd)) != (Path(binding['sys']) / 'dev').read_text().strip():
             raise w.Unsafe('Disk identity changed before standby.')
+        if io.topology(w,binding)!=topology or activity(binding)!=(after_flush,0) or io.loop_activity(topology)!=quiet_images:
+            raise refusal(w, 'busy', 'Mounts or activity changed immediately before standby.')
         w.WORKER_LOCK_FDS = (*locks, fd)
         pinned = '/proc/self/fd/' + str(fd)
         power_command(w, '-y', pinned)
-        state = power_command(w, '-C', pinned)
+        try:
+            state = power_command(w, '-C', pinned)
+        except w.Unsafe:
+            raise refusal(w, 'unverified', 'Standby command sent, but the USB-SATA bridge could not verify power state. Applications remain running; do not assume the disk is asleep.') from None
     finally:
         w.WORKER_LOCK_FDS = locks
         os.close(fd)
-    if activity(binding) != (after_flush, 0):
+    if identity(w)!=binding or io.topology(w,binding)!=topology:
+        raise refusal(w, 'unavailable', 'Drive identity or mounts changed after standby; power state is unverified.')
+    if activity(binding) != (after_flush, 0) or io.loop_activity(topology)!=quiet_images:
         raise refusal(w, 'busy', 'New disk activity occurred during standby; the HDD may have woken.')
     if not re.search(r'drive state is:\s*standby', state, re.I):
-        raise refusal(w, 'unsupported', 'Standby command sent, but this USB-SATA bridge did not confirm standby. Support is unverified.')
+        raise refusal(w, 'unverified', 'Standby command sent, but this USB-SATA bridge did not confirm standby. Support is unverified.')
     save(w, binding, 'Standby confirmed; filesystem remains mounted.', sleeping=True, counters=after_flush)
-    return 'HDD standby confirmed. The filesystem remains mounted; new access may wake it.'
+    return 'HDD standby confirmed. Filesystems remain mounted and applications remain running; new access may wake it.'
 
 
 def save(w, binding, message, sleeping=False, suppressed=False, counters=None):

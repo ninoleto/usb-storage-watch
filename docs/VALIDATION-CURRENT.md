@@ -1,3 +1,35 @@
+# Beta 6 candidate validation
+
+Candidate `2.0.1~beta6` extends published Beta 5 with guarded mounted standby and
+passive per-container I/O diagnostics. No release publication or host installation
+is part of preparation. Prior validation below is historical evidence, not repeated
+physical acceptance of this change.
+
+Focused tests use temporary kernel/cgroup fixtures and simulated Docker, mounts,
+power and flush operations. They cover idle running consumers/open files, continuing
+reads/writes/discards/flushes and pending requests, image order and activity, changed
+identities/mounts, swap and incomplete counters, missing/shared cgroup metrics,
+no double counting and invalidation of confirmed sleep after subsequent I/O.
+Affected unmount, recovery cleanup, USB identity and manual app-start guards pass.
+
+Chromium checks run the packaged UI and authenticated broker at 320/768/1440 px.
+Companion production 0.2.6 client/controller checks use localhost verified HTTPS,
+management-token/session/CSRF authentication and the same guarded standby path.
+Worker launching/storage/Docker/power are simulated; the locks and backend are real.
+These are client integration tests, not actual Companion host/Stream Deck tests.
+No physical drive was put to sleep and no production service/container was operated.
+
+Private-root fresh/upgrade, package/payload/version/privacy and unchanged Companion
+checks are recorded with the candidate. See [HDD standby](HDD-STANDBY.md) for hardware
+acceptance steps. Adapter standby confirmation, normal wake/access with running
+apps, automatic physical standby and target-host compatibility remain unverified.
+The old optional Companion review-only description still says “busy users”; the
+supported one-press controls use the corrected backend and return its actual reason.
+Companion 0.2.6 bytes are preserved; no button replacement is needed for this backend
+change. The legacy review wording can be updated in a separate module release.
+
+## Previous Beta 5 evidence
+
 # Current validation and limits
 
 Beta **2.0.1~beta5**, prepared tag **v2.0.1-beta.5**, completes reviewed access changes

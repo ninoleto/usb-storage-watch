@@ -106,80 +106,8 @@ class StandbyTests(unittest.TestCase):
                 w.standby.power_command(w.usb_context(), '-Y', '/dev/synthetic')
             run.assert_not_called()
 
-    def test_busy_hdd_is_not_flushed_or_stopped(self):
-        context = w.usb_context()
-        context.command = mock.Mock()
-        with mock.patch.object(w.standby, 'identity', return_value={'sys':'/fake'}), \
-                mock.patch.object(Path, 'read_text', return_value='1'), \
-                mock.patch.object(context, 'snapshot', return_value={'healthy':True}), \
-                mock.patch.object(w.standby, 'storage_kind', return_value='mechanical'), \
-                mock.patch.object(w.standby, 'status', return_value={'sleeping':False}), \
-                mock.patch.object(w.standby, 'users', side_effect=w.Unsafe('active users')), \
-                mock.patch.object(w.standby, 'power_command') as power:
-            with self.assertRaisesRegex(w.Unsafe, 'active users'):
-                w.standby.sleep(context)
-            context.command.assert_not_called(); power.assert_not_called()
-
-    def sleep_case(self, counters, fuser_code=1, mounted=True, fuser_error=""):
-        with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory); (root/'queue').mkdir()
-            (root/'queue/rotational').write_text('1'); (root/'dev').write_text('8:0')
-            (root/'node').touch()
-            binding = dict(sys=directory, path=str(root/'node'))
-            context = w.usb_context(); context.device_number = lambda _: '8:0'
-            calls = []
-            context.command = lambda argv, **kw: calls.append(argv)
-            def command(argv, **kw):
-                calls.append(argv)
-                if argv[0] == '/usr/bin/fuser':
-                    return types.SimpleNamespace(returncode=fuser_code, stdout='', stderr=fuser_error)
-                return types.SimpleNamespace(returncode=0, stdout='drive state is: standby', stderr='')
-            with contextlib.ExitStack() as stack:
-                stack.enter_context(mock.patch.object(w.standby, 'identity', return_value=binding))
-                stack.enter_context(mock.patch.object(w.standby, 'storage_kind', return_value='mechanical'))
-                stack.enter_context(mock.patch.object(w.standby, 'status', return_value={'sleeping':False}))
-                stack.enter_context(mock.patch.object(w.standby, 'users'))
-                stack.enter_context(mock.patch.object(w.standby, 'filesystems', return_value=([],[w.MOUNT])))
-                stack.enter_context(mock.patch.object(context, 'snapshot', return_value={'healthy':mounted}))
-                stack.enter_context(mock.patch.object(w.standby, 'activity', side_effect=counters))
-                stack.enter_context(mock.patch.object(w.standby.subprocess, 'run', side_effect=command))
-                stack.enter_context(mock.patch.object(w.standby.time, 'sleep', side_effect=lambda seconds:calls.append(['wait',seconds])))
-                saved = stack.enter_context(mock.patch.object(w.standby, 'save'))
-                try:
-                    w.standby.sleep(context)
-                    return 'success', calls, saved.called
-                except w.Unsafe as exc:
-                    return w.standby.error_result(exc), calls, saved.called
-
-    def test_three_second_guard_then_sync_then_only_normal_standby(self):
-        result, calls, saved = self.sleep_case([([0],0)] * 5)
-        self.assertEqual(result, 'success'); self.assertTrue(saved)
-        self.assertEqual(calls[:3], [['/usr/bin/fuser','-m','-M',w.MOUNT],
-                                   ['wait',3], ['/usr/bin/sync','-f','--',w.MOUNT]])
-        self.assertEqual([call[:2] for call in calls[3:]], [['/usr/sbin/hdparm','-y'], ['/usr/sbin/hdparm','-C']])
-        self.assertTrue(calls[3][2].startswith('/proc/self/fd/'))
-
-    def test_busy_users_or_three_second_io_change_never_flush_or_sleep(self):
-        for counters, code in [([],0), ([([0],0),([1],0)],1)]:
-            with self.subTest(fuser_code=code):
-                result, calls, saved = self.sleep_case(counters, code)
-                self.assertEqual(result, 'busy'); self.assertFalse(saved)
-                self.assertFalse(any(c[0] in ('/usr/bin/sync','/usr/sbin/hdparm') for c in calls))
-
-    def test_unmounted_or_failed_user_check_never_sleeps(self):
-        for mounted, code, expected in [(False,1,'unavailable'), (True,2,'failed')]:
-            result, calls, saved = self.sleep_case([],code,mounted)
-            self.assertEqual(result,expected); self.assertFalse(saved)
-            self.assertFalse(any(c[0] == '/usr/sbin/hdparm' for c in calls))
-
-    def test_fuser_idle_exit_is_allowed_but_inspection_diagnostics_block_standby(self):
-        result, calls, saved = self.sleep_case([], fuser_error='Cannot open /proc directory: Permission denied')
-        self.assertEqual(result,'failed'); self.assertFalse(saved)
-        self.assertFalse(any(call[0] in ('/usr/bin/sync','/usr/sbin/hdparm') for call in calls))
-
-    def test_io_during_standby_never_claims_confirmed_sleep(self):
-        result, _, saved = self.sleep_case([([0],0)]*4+[([1],0)])
-        self.assertEqual(result,'busy'); self.assertFalse(saved)
+    # Mounted-standby I/O/order/consumer cases now live in test_ui8_sleep and
+    # test_beta6_standby. fuser remains a strict unmount guard, not a sleep guard.
 
     def test_automatic_sleep_settings_upgrade_preserves_old_configuration(self):
         old = w.settings.default(); old['disk']['uuid']='11111111-1111-4111-8111-111111111111'

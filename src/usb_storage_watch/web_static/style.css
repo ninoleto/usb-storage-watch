@@ -650,3 +650,5 @@ p.app-recovery-notice{color:#f4cd78;background:#302719;border-left:3px solid #ae
 #integration-setup code{overflow-wrap:anywhere}
 
 #management-token-heading,#network-heading{scroll-margin-top:90px}
+
+.drive-activity li { overflow-wrap: anywhere; margin-block: .65rem; }

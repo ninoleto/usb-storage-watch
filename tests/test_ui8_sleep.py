@@ -194,6 +194,9 @@ class ManualStandby(unittest.TestCase):
         self.stack.enter_context(mock.patch.object(w.standby, 'status', return_value={'sleeping': False}))
         self.stack.enter_context(mock.patch.object(w.standby, 'storage_kind', return_value='mechanical'))
         self.users = self.stack.enter_context(mock.patch.object(w.standby, 'users'))
+        self.topology = self.stack.enter_context(mock.patch.object(w.standby.io, 'topology', return_value=dict(targets=['/mnt/test/image','/mnt/test'],devices=[],loops={},mounts=[])))
+        self.stack.enter_context(mock.patch.object(w.standby.io, 'swap_guard'))
+        self.stack.enter_context(mock.patch.object(w.standby.io, 'capture', return_value={'containers':{},'available':False}))
         self.stack.enter_context(mock.patch.object(w.standby, 'filesystems', return_value=([], ['/mnt/test', '/mnt/test/image'])))
         self.fuser = self.stack.enter_context(mock.patch.object(w.standby.subprocess, 'run',
             return_value=SimpleNamespace(returncode=1, stdout='', stderr='')))
@@ -233,12 +236,13 @@ class ManualStandby(unittest.TestCase):
         self.power.assert_not_called()
         self.save.assert_not_called()
 
-    def test_active_users_are_refused_before_flushing_or_sending_standby(self):
-        self.users.side_effect = w.standby.refusal(w, 'busy', 'Filesystem has active users.')
-        with self.assertRaisesRegex(w.Unsafe, 'active users'):
-            self.sleep_now()
-        self.ctx.command.assert_not_called()
-        self.power.assert_not_called()
+    def test_idle_handles_and_running_containers_do_not_block_standby(self):
+        self.users.side_effect = AssertionError('Standby must not scan idle consumers')
+        self.fuser.side_effect = AssertionError('Standby must not call fuser')
+        self.sleep_now()
+        self.users.assert_not_called()
+        self.fuser.assert_not_called()
+        self.power.assert_called()
 
     def test_flush_failure_never_sends_standby(self):
         self.ctx.command.side_effect = w.Unsafe('sync failed')
@@ -268,7 +272,7 @@ class ManualStandby(unittest.TestCase):
         self.power.return_value = 'drive state is: active/idle'
         with self.assertRaisesRegex(w.Unsafe, 'did not confirm standby') as error:
             self.sleep_now()
-        self.assertEqual(w.standby.error_result(error.exception), 'unsupported')
+        self.assertEqual(w.standby.error_result(error.exception), 'unverified')
         self.save.assert_not_called()
 
 

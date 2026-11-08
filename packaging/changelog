@@ -1,3 +1,10 @@
+usb-storage-watch (2.0.1~beta6) testing; urgency=medium
+
+  * Permit guarded mounted HDD standby with idle running applications.
+  * Add passive per-container/device I/O diagnostics and explicit attribution limits.
+
+ -- USB Storage Watch contributors <noreply@example.invalid>  Sun, 08 Nov 2026 12:00:00 +0000
+
 usb-storage-watch (2.0.1~beta5) testing; urgency=medium
 
   * Review eligible Compose project directory and configuration-file access together.

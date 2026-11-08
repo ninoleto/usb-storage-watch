@@ -48,7 +48,7 @@ s, w, n = cli.s, cli.w, cli.n
 WEB_SERVICE = 'usb-storage-watch-web.service'
 LAN_SERVICE = 'usb-storage-watch-lan.service'
 NETWORK_LOCK = threading.Lock()
-READS = {'session', 'status', 'config', 'disks', 'docker', 'events', 'diagnostics', 'mount-plan', 'migration-plan', 'protection-plan', 'unmount-plan'}
+READS = {'drive-activity', 'session', 'status', 'config', 'disks', 'docker', 'events', 'diagnostics', 'mount-plan', 'migration-plan', 'protection-plan', 'unmount-plan'}
 READS.add('usb-status')
 READS.add('application-status')
 READS.add('network-state')
@@ -1566,6 +1566,10 @@ class Broker:
             return protection.recovery_plan(protection_context(),data)
         if action == 'recovery-settings':
             return self.manual_action('automatic recovery setting',lambda:protection.recovery_settings(protection_context(),data))
+        if action == 'drive-activity':
+            c=configuration();w.configure(c)
+            if not c['disk']['uuid']: raise ValueError('Select a configured drive first.')
+            return w.standby.io.observe(w.usb_context())
         if action == 'status':
             return status()
         if action == 'usb-status':

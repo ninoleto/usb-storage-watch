@@ -14,7 +14,7 @@ common = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(common)
 integrations = common.module('web_integrations')
 
-READS = {'session', 'status', 'config', 'disks', 'docker', 'events', 'diagnostics', 'mount-plan', 'migration-plan', 'protection-plan', 'unmount-plan'}
+READS = {'drive-activity', 'session', 'status', 'config', 'disks', 'docker', 'events', 'diagnostics', 'mount-plan', 'migration-plan', 'protection-plan', 'unmount-plan'}
 READS.update(('application-status', 'docker-overview'))
 READS.update(('usb-status','fleet-status'))
 READS.update(('global-config','fleet-events','notification-preferences','recovery-plan','image-discover',

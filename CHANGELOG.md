@@ -1,3 +1,10 @@
+## 2.0.1 Beta 6 candidate
+
+- Mounted HDD standby uses flushed I/O evidence instead of idle consumer handles.
+- Manual and automatic standby share the bounded post-flush quiet guard.
+- Drive activity diagnostics report per-container/device observations and unavailable/unattributed activity.
+- Strict unmount/reset/recovery protections and Companion 0.2.6 are unchanged.
+
 ## 2.0.1 beta 4
 
 - Identify exact Compose/environment files and ancestor directories rejected by

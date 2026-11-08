@@ -14,10 +14,27 @@ and 117 packaged runtime files matched the retained manifests. A local annotated
 checkpoint and verified Git bundle preserve that source. The UI's “Beta 5” footer
 is present in those exact Beta 6 bytes; the runtime version is `2.0.1~beta6`.
 
-The maintainer reports the installed Beta 6 hardware result below. An independent
-fingerprint of the installed ZORIN code is still pending; preparation has not
-connected to ZORIN. Publication and historical-release deletion remain gated on
-that match. No new RC1 hardware test is claimed.
+On November 8, 2026, the maintainer supplied the read-only verification output
+from ZORIN, obtained through ANTEC:
+
+```text
+install ok installed 2.0.1~beta6
+Files: 117
+Code SHA256: a347f3cefb690085a1cbf633e8d05508b8ecd083ade1b02dc8a62abf016fbb71
+```
+
+The version, file count and aggregate SHA-256 exactly match the preserved Beta 6
+package/source fingerprint. **The installed application files are confirmed to
+match the preserved Beta 6 source.** This is maintainer-supplied read-only
+evidence; preparation did not connect to ZORIN. The deployed-source verification
+requirement is satisfied. No new RC1 hardware test is claimed.
+
+The maintainer explicitly requested publication of the already prepared candidate,
+without rebuilding or modifying its recovery engine, while retaining the incomplete
+test results below. The frozen RC1 assets remain those built from commit
+`8aedce7bd304f291961f32ae8759cfe9baeaa4dc`. This report adds evidence after that
+build; the reports embedded in those unchanged packages retain their earlier
+preparation status. All runtime files and package checksums remain unchanged.
 
 ## Maintainer-reported hardware evidence
 
@@ -67,11 +84,20 @@ the complete RC1 suite green. No recovery code was changed to silence tests.
 Unrestricted systemd/browser/TLS checks and a clean, isolated full-suite result
 remain outstanding before claiming complete automated release validation.
 
-GitHub CLI access in this preparation environment failed DNS resolution for
-`api.github.com`. The live release inventory, publication, Latest designation,
-public downloads and final GitHub presentation have not been verified. All
-historical releases/tags remain untouched. Six cached release records and 24
-saved assets were hash-verified and backed up locally, pending fresh enumeration.
+GitHub connectivity was retried after receiving the ZORIN fingerprint. The CLI
+could not connect to `api.github.com`; curl failed name resolution. Read-only
+socket checks established that this execution sandbox rejects both TCP and UDP
+socket creation with `errno=1: Operation not permitted`, before DNS or GitHub
+authentication can be checked. This does not establish a fault in the maintainer's
+host DNS or GitHub credentials.
+
+The configured fetch/push remote was verified locally as
+`https://github.com/ninoleto/usb-storage-watch.git`. Live repository ownership,
+permissions, branch state and release inventory could not be verified. Publication,
+Latest designation, public downloads and final GitHub presentation remain unverified.
+Per the maintainer's instruction, publication/cleanup stopped at this network
+blocker. No release/tag was pushed or deleted. Six cached release records and 24
+saved assets remain hash-verified and backed up locally, pending fresh enumeration.
 
 ## Not performed and limitations
 

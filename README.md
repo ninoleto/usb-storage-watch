@@ -1,12 +1,12 @@
-# USB Storage Watch 2.0.1 RC1
+# USB Storage Watch 2.0.2
 
 USB Storage Watch monitors removable ext4 filesystems on Linux. It can recover a
 returned USB disk, verify required storage, restore selected virtual disk images,
 and restart explicitly selected Docker containers. A local web dashboard and CLI
 provide configuration, monitoring, diagnostics and email notifications.
 
-**Version `2.0.1-rc.1` is a release candidate undergoing further reliability testing.**
-It preserves the Beta 6 recovery implementation. RC1 changes release identity,
+**Version `2.0.2` is a regular release with documented testing limitations.**
+It preserves the Beta 6 recovery implementation. 2.0.2 changes release identity,
 packaging metadata and documentation; it adds no recovery features.
 
 ## Hardware Compatibility and Testing
@@ -40,7 +40,7 @@ The main ext4 filesystem was restored and verified, including UUID, filesystem
 type and read/write flags. The dependent virtual image was restored; Erugo, Plex,
 Immich and PhotoPrism restarted; container verification checks passed; and the
 maintainer manually confirmed application functionality. This is maintainer-reported
-hardware evidence, not a new physical test performed during RC1 packaging.
+hardware evidence, not a new physical test performed during 2.0.2 packaging.
 
 **Earlier ZORIN tests encountered serious mount recovery difficulties.** The
 successful Beta 6 result does not mean every recovery attempt has succeeded or
@@ -48,7 +48,7 @@ that every future incident will recover.
 
 Earlier versions were also tested successfully on **Ubuntu Studio 26.04.1** with
 different storage devices. Those results are historical; they do **not** establish
-that the exact RC1 build was tested there. See
+that the exact 2.0.2 build was tested there. See
 [current validation and limits](docs/VALIDATION-CURRENT.md).
 
 ## Requirements and architectures
@@ -83,20 +83,25 @@ that the exact RC1 build was tested there. See
   from Beta 6; see [capabilities and limits](docs/HDD-STANDBY.md).
 - Optional [Bitfocus Companion 0.2.6 integration](docs/COMPANION.md), unchanged.
 
+The automated suite is incomplete: the earlier preparation run had **100 errors
+and 24 skips across 1,352 tests**. Those results and any fresh 2.0.2 checks are
+separated in [validation](docs/VALIDATION-CURRENT.md). A normal version number
+does not imply broad hardware qualification or guaranteed recovery.
+
 ## Installation
 
 Download the Debian package, portable archive, Companion archive, release notes
 and `SHA256SUMS` from the
-[RC1 release](https://github.com/ninoleto/usb-storage-watch/releases/tag/v2.0.1-rc.1).
+[2.0.2 release](https://github.com/ninoleto/usb-storage-watch/releases/tag/v2.0.2).
 Verify the downloaded files in one directory:
 
 ```sh
 sha256sum -c SHA256SUMS
-sudo apt install ./usb-storage-watch_2.0.1-rc.1_all.deb
+sudo apt install ./usb-storage-watch_2.0.2_all.deb
 ```
 
-The Debian version is `2.0.1~rc.1`, which sorts above Beta 6 and below the eventual
-`2.0.1`. The application/API version is `2.0.1-rc.1`.
+The application, API and Debian package version is `2.0.2`, which sorts above
+Beta 6. The display name is **USB Storage Watch 2.0.2**.
 Checksums detect changed bytes; these packages are unsigned.
 
 A fresh installation enables the broker, localhost dashboard and boot coordinator
@@ -121,15 +126,15 @@ Install dependencies through your distribution first. Use one installation metho
 consistently; do not overlay the portable installer on a dpkg installation.
 
 ```sh
-tar -xzf usb-storage-watch-2.0.1-rc.1.tar.gz
-cd usb-storage-watch-2.0.1-rc.1
+tar -xzf usb-storage-watch-2.0.2.tar.gz
+cd usb-storage-watch-2.0.2
 sudo python3 tools/install.py
 ```
 
 For portable headless use, add `--headless`. For Debian headless use:
 
 ```sh
-sudo env USB_STORAGE_WATCH_HEADLESS=1 apt install ./usb-storage-watch_2.0.1-rc.1_all.deb
+sudo env USB_STORAGE_WATCH_HEADLESS=1 apt install ./usb-storage-watch_2.0.2_all.deb
 sudo usb-storage-watch setup
 sudo usb-storage-watch validate
 sudo usb-storage-watch diagnose
@@ -140,7 +145,7 @@ installation. The CLI setup wizard does not format, mount, unmount or repair dis
 
 ## Upgrade from Beta 6
 
-Use the [Beta 6 → RC1 upgrade procedure](docs/UPGRADING-RC1.md). It verifies the
+Use the [Beta 6 → 2.0.2 upgrade procedure](docs/UPGRADING.md). It verifies the
 package, retains the Beta 6 installer, prepares existing services for maintenance,
 privately backs up configuration/state/code, and installs through APT.
 Run it only when no recovery, storage/app operation or network confirmation is
@@ -148,8 +153,8 @@ pending. Publication does not upgrade any installed host.
 
 Existing configuration, credentials, images, Docker selections, incident receipts
 and queued mail are preserved. No configuration migration or recovery-policy
-change is part of RC1. Sign in again after services restart and reload the page
-to obtain **USB Storage Watch 2.0.1 RC1**.
+change is part of 2.0.2. Sign in again after services restart and reload the page
+to obtain **USB Storage Watch 2.0.2**.
 
 ## Initial configuration
 

@@ -1,4 +1,4 @@
-## 2.0.1 RC1
+## 2.0.2
 
 Promote the Beta 6 implementation without recovery behavior changes. Centralize
 release identity, correct the stale Beta 5 dashboard label, update packaging and

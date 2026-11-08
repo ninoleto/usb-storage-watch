@@ -4,9 +4,9 @@ Start with the [README](../README.md) for installation, configuration and limita
 
 ## Current guidance
 
-- [RC1 release notes](RELEASE-NOTES.md)
-- [RC1 validation and evidence limits](VALIDATION-CURRENT.md)
-- [Beta 6 to RC1 upgrade](UPGRADING-RC1.md)
+- [2.0.2 release notes](RELEASE-NOTES.md)
+- [2.0.2 validation and evidence limits](VALIDATION-CURRENT.md)
+- [Beta 6 to 2.0.2 upgrade](UPGRADING.md)
 - [Maintenance, removal and troubleshooting](MAINTENANCE.md)
 - [Web dashboard](WEB-GUI.md), [configuration](CONFIGURATION.md),
   [recovery](RECOVERY.md)
@@ -16,9 +16,10 @@ Start with the [README](../README.md) for installation, configuration and limita
 
 ## Historical evidence
 
+[Earlier preparation validation](VALIDATION-PREPARATION-HISTORY.md),
 [Beta 6 preparation validation](VALIDATION-BETA6-HISTORY.md),
 [earlier release notes](RELEASE-HISTORY.md), DEV/UI reports, prototype documents
 and older validation reports remain as development evidence. They describe their
 named versions; old commands, version strings, promised work and acceptance status
-are not current RC1 instructions or proof of RC1 hardware testing.
-The current README and RC1 validation take precedence. Git history is preserved.
+are not current 2.0.2 instructions or proof of 2.0.2 hardware testing.
+The current README and 2.0.2 validation take precedence. Git history is preserved.

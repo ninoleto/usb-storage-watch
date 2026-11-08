@@ -1,7 +1,7 @@
 # Maintenance and troubleshooting
 
 Use the [current README](../README.md) and
-[Beta 6 → RC1 upgrade procedure](UPGRADING-RC1.md) for exact package names,
+[Beta 6 → 2.0.2 upgrade procedure](UPGRADING.md) for exact package names,
 private backups and service preparation.
 
 ## Configuration and monitoring
@@ -17,9 +17,9 @@ receipts, reset budgets, pending port-enable evidence or email queues.
 Stopping a monitor preserves its incident state. Existing cleanup obligations
 must be reconciled by the installed helpers.
 
-The application version is `2.0.1-rc.1`; Debian metadata uses `2.0.1~rc.1`.
+The application version is `2.0.2`; Debian metadata uses the same version.
 Configuration and incident schema versions are independent of release identity.
-RC1 changes no schema, configuration default or recovery policy.
+2.0.2 changes no schema, configuration default or recovery policy.
 
 ## Upgrade and recovery from installation errors
 
@@ -66,7 +66,7 @@ and `/var/lib/usb-storage-watch`. Do not delete the watched filesystem.
 | USB re-enable failed | Keep helpers and ledger installed; inspect port identity and kernel logs. Manual intervention or reboot may be needed. |
 | SMTP failure | Review host/port/TLS, CA trust, provider restrictions and spam. Acceptance is not inbox delivery. |
 | Timeout followed by late return | The incident's timeout and later recovery may have separate notifications; retained evidence prevents renewed reset budgets. |
-| Old dashboard label | Beta 6 hard-coded Beta 5. Verify RC1 package/CLI, running web service and browser reload; responses use no-store. |
+| Old dashboard label | Beta 6 hard-coded Beta 5. Verify 2.0.2 package/CLI, running web service and browser reload; responses use no-store. |
 
 ```sh
 usb-storage-watch --version

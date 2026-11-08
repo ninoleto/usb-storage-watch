@@ -1,7 +1,7 @@
-# Upgrade Beta 6 to USB Storage Watch 2.0.1 RC1
+# Upgrade Beta 6 to USB Storage Watch 2.0.2
 
 Run these commands **on the target host**, during an idle maintenance window.
-For the maintainer's ZORIN host, use its terminal through ANTEC. Publishing RC1
+For the maintainer's ZORIN host, use its terminal through ANTEC. Publishing 2.0.2
 does not execute this procedure or upgrade production.
 
 Before starting, verify no recovery, storage action, app operation or network
@@ -11,7 +11,7 @@ selections, native consumers or recovery receipts to make the upgrade pass.
 
 ## Files and prerequisites
 
-Place all five RC1 release files in one directory, together with the retained
+Place all five 2.0.2 release files in one directory, together with the retained
 `usb-storage-watch_2.0.1-beta6_all.deb` installer. Retain it privately before
 historical GitHub releases are removed; do not rely on an old release URL.
 The Beta 6 SHA-256 is:
@@ -39,14 +39,14 @@ intended state. LAN disabled before upgrade stays disabled.
   printf '%s  usb-storage-watch_2.0.1-beta6_all.deb\n' \
     '6328a9de25074bda967a78910d25ffbc59202e9932580d7773e932b7fa42e6df' | sha256sum -c -
   test "$(dpkg-deb -f usb-storage-watch_2.0.1-beta6_all.deb Version)" = '2.0.1~beta6'
-  test "$(dpkg-deb -f usb-storage-watch_2.0.1-rc.1_all.deb Package)" = 'usb-storage-watch'
-  test "$(dpkg-deb -f usb-storage-watch_2.0.1-rc.1_all.deb Version)" = '2.0.1~rc.1'
-  test "$(dpkg-deb -f usb-storage-watch_2.0.1-rc.1_all.deb Architecture)" = 'all'
-  sudo apt-get --simulate --no-remove install ./usb-storage-watch_2.0.1-rc.1_all.deb
+  test "$(dpkg-deb -f usb-storage-watch_2.0.2_all.deb Package)" = 'usb-storage-watch'
+  test "$(dpkg-deb -f usb-storage-watch_2.0.2_all.deb Version)" = '2.0.2'
+  test "$(dpkg-deb -f usb-storage-watch_2.0.2_all.deb Architecture)" = 'all'
+  sudo apt-get --simulate --no-remove install ./usb-storage-watch_2.0.2_all.deb
 
   sudo sh -eu - "$PWD" <<'USW_BACKUP'
 umask 077
-usw_backup=$(mktemp -d /var/backups/usw-before-rc1.XXXXXX)
+usw_backup=$(mktemp -d /var/backups/usw-before-2.0.2.XXXXXX)
 printf 'Private backup directory: %s\n' "$usw_backup"
 systemctl --no-pager --full list-units --all 'usb-storage-watch*.service' 'usb-storage-watch*.timer' > "$usw_backup/services-before.txt"
 systemctl --no-pager list-unit-files 'usb-storage-watch*.service' 'usb-storage-watch*.timer' > "$usw_backup/units-before.txt"
@@ -65,17 +65,17 @@ sha256sum -c SHA256SUMS
 printf 'Private backup and rollback package verified: %s\n' "$usw_backup"
 USW_BACKUP
 
-  sudo apt-get --no-remove install ./usb-storage-watch_2.0.1-rc.1_all.deb
+  sudo apt-get --no-remove install ./usb-storage-watch_2.0.2_all.deb
   test "$(dpkg-query -W -f='${Status}' usb-storage-watch)" = 'install ok installed'
-  test "$(dpkg-query -W -f='${Version}' usb-storage-watch)" = '2.0.1~rc.1'
+  test "$(dpkg-query -W -f='${Version}' usb-storage-watch)" = '2.0.2'
   usb-storage-watch --version
   systemctl --no-pager --full list-units --all 'usb-storage-watch*.service' 'usb-storage-watch*.timer'
   systemctl --no-pager list-unit-files 'usb-storage-watch*.service' 'usb-storage-watch*.timer'
 )
 ```
 
-The CLI should show `USB Storage Watch 2.0.1-rc.1`; the dashboard should show
-`USB Storage Watch 2.0.1 RC1`. Reload and sign in again. Check saved drive/image
+The CLI should show `USB Storage Watch 2.0.2`; the dashboard should show
+`USB Storage Watch 2.0.2`. Reload and sign in again. Check saved drive/image
 selections, monitoring/service states, LAN/HTTPS, container state and existing
 application functionality without initiating a new recovery test.
 
@@ -98,4 +98,4 @@ must use its portable installer instead of these Debian commands; preserve its
 previous source archive and private configuration/state first.
 
 See [validation](VALIDATION-CURRENT.md) for what was actually tested. The operator
-procedure has not been executed on production during RC1 preparation.
+procedure has not been executed on production during 2.0.2 preparation.

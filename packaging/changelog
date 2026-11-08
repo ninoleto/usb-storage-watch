@@ -1,6 +1,6 @@
-usb-storage-watch (2.0.1~rc.1) testing; urgency=medium
+usb-storage-watch (2.0.2) unstable; urgency=medium
 
-  * Promote the preserved Beta 6 implementation to RC1.
+  * Release the preserved Beta 6 implementation as 2.0.2.
   * Correct release identity and document compatibility and testing limits.
 
  -- USB Storage Watch contributors <maintainers@example.invalid>  Sun, 08 Nov 2026 03:00:00 +0100

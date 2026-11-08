@@ -1,11 +1,10 @@
-# USB Storage Watch 2.0.1 RC1
+# USB Storage Watch 2.0.2
 
-**Release candidate undergoing further reliability testing.**
-Application version: `2.0.1-rc.1`. Tag: `v2.0.1-rc.1`.
-Debian version: `2.0.1~rc.1`.
+**Regular release with documented hardware and testing limitations.**
+Application version: `2.0.2`. Tag: `v2.0.2`.
+Debian version: `2.0.2`.
 
-This promotion preserves the Beta 6 implementation at commit
-`b06286f72f25744cd91331b3bd28918d69b5d0fd`. It changes version identification,
+This release preserves the proven Beta 6 recovery behavior. It changes version identification,
 packaging metadata and documentation. No recovery features, configuration migration,
 dependency upgrades or recovery-engine refactoring are included.
 
@@ -35,7 +34,7 @@ approximately **1 minute 52 seconds**.
 The maintainer confirmed main ext4 restoration; UUID, filesystem type and
 read/write flags; dependent virtual-image restoration; restart of Erugo, Plex,
 Immich and PhotoPrism; passing container verification; and manual application
-functionality. This is reported **Beta 6** hardware testing. No new physical RC1
+functionality. This is reported **Beta 6** hardware testing. No new physical 2.0.2
 test is claimed.
 
 **Previous ZORIN tests experienced serious mount recovery difficulties.**
@@ -43,7 +42,7 @@ This successful result does not erase those failures or guarantee future recover
 
 Earlier versions were also tested successfully on **Ubuntu Studio 26.04.1** with
 different storage devices. That historical evidence does **not** verify the exact
-RC1 build on Ubuntu Studio.
+2.0.2 build on Ubuntu Studio.
 
 ## What changed
 
@@ -51,7 +50,7 @@ RC1 build on Ubuntu Studio.
   dashboard title/footer and build metadata.
 - Corrected the hard-coded “Beta 5 · TEST BUILD” footer present in Beta 6.
   Responses already use `Cache-Control: no-store`; reload after upgrading.
-- Public version `2.0.1-rc.1`; Debian ordering uses `2.0.1~rc.1`.
+- Application, API and Debian version `2.0.2`; display **USB Storage Watch 2.0.2**.
 - Rewritten README, upgrade/maintenance instructions, evidence and limitations.
   Historical tests and contributor instructions are preserved.
 - Improved exclusions for local caches, reports and build artifacts.
@@ -62,8 +61,8 @@ controls retain the Beta 6 implementation. Companion 0.2.6 is unchanged.
 
 ## Downloads and installation
 
-- `usb-storage-watch_2.0.1-rc.1_all.deb` — Debian-family installer.
-- `usb-storage-watch-2.0.1-rc.1.tar.gz` — portable source/installer and tests.
+- `usb-storage-watch_2.0.2_all.deb` — Debian-family installer.
+- `usb-storage-watch-2.0.2.tar.gz` — portable source/installer and tests.
 - `usb-storage-watch-companion-0.2.6.tgz` — unchanged optional Companion module.
 - `RELEASE-NOTES.md` — these notes.
 - `SHA256SUMS` — SHA-256 checksums for all four files above.
@@ -72,27 +71,37 @@ Download all five into one directory, then:
 
 ```sh
 sha256sum -c SHA256SUMS
-sudo apt install ./usb-storage-watch_2.0.1-rc.1_all.deb
+sudo apt install ./usb-storage-watch_2.0.2_all.deb
 ```
 
 Fresh installations leave drive monitoring/recovery and LAN access unconfigured.
-See the [README](https://github.com/ninoleto/usb-storage-watch/blob/v2.0.1-rc.1/README.md)
+See the [README](https://github.com/ninoleto/usb-storage-watch/blob/v2.0.2/README.md)
 for dependencies, initial setup and security.
 For Beta 6, follow the
-[upgrade procedure](https://github.com/ninoleto/usb-storage-watch/blob/v2.0.1-rc.1/docs/UPGRADING-RC1.md);
+[upgrade procedure](https://github.com/ninoleto/usb-storage-watch/blob/v2.0.2/docs/UPGRADING.md);
 retain a local Beta 6 rollback package because historical release downloads may
 be removed. Publication does not upgrade the production installation.
 
 ## Validation and remaining limits
 
-See [RC1 validation](https://github.com/ninoleto/usb-storage-watch/blob/v2.0.1-rc.1/docs/VALIDATION-CURRENT.md)
+See [2.0.2 validation](https://github.com/ninoleto/usb-storage-watch/blob/v2.0.2/docs/VALIDATION-CURRENT.md)
 for exact completed checks, environment blockers and tests not performed.
-The 184 focused core/standby/storage/distribution checks, packaged identity/API
-checks, 11 isolated installer checks and private-root Beta 6 upgrade/rollback
-passed. The full suite did not pass: 1,352 tests ran with 100 errors and 24 skips.
-Missing Compose/browser dependencies, sandbox socket restrictions and inherited
-fixtures are documented; representative failures also reproduce on Beta 6.
-Systemd/browser/TLS validation and deployed-source verification remain incomplete.
+Earlier preparation passed 184 focused checks, package identity checks and 11
+isolated installer checks. Its full suite was **not green**: 1,352 tests ran with
+100 errors and 24 skips. Missing trusted Compose/browser dependencies, sandbox
+socket restrictions and inherited fixtures are documented; representative failures
+also reproduce on Beta 6. Those earlier results are not a fresh 2.0.2 full-suite
+pass.
+
+The rebuilt 2.0.2 packages passed **194 focused checks**, packaged UI/API/CLI
+identity checks, **11 isolated installer checks**, and private-root Beta 6 upgrade
+and rollback. The final systemd verifier remains blocked by sandbox socket
+permissions. Source/package contents, privacy and SHA-256 checks were verified.
+The full suite was not rerun for this version/documentation-only change.
+
+The maintainer's read-only 117-file ZORIN fingerprint exactly matches the preserved
+Beta 6 source. No new physical 2.0.2 acceptance, unrestricted browser/TLS/systemd
+verification or extensive Linux distribution testing is claimed.
 Simulated recovery and isolated installer tests do not establish hardware reliability.
 No production USB reset, forced unmount, filesystem repair or automated ZORIN
 upgrade is part of this release preparation. Packages are unsigned.

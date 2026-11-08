@@ -1,21 +1,20 @@
-# USB Storage Watch 2.0.1 RC1 — validation
+# USB Storage Watch 2.0.2 — validation and limitations
 
-RC1 is a release candidate undergoing further reliability testing.
-This report distinguishes source/package checks, isolated simulations and hardware
-observations. Final publication requires deployed-source identification and
-successful GitHub verification; neither is inferred from a build.
+2.0.2 is a normal release under the maintainer's continuous release policy.
+A normal version number does not mean complete automated testing, broad hardware
+qualification or guaranteed recovery. Known test gaps are retained below.
 
-## Source provenance
+## Source provenance and installed ZORIN verification
 
-The frozen Beta 6 baseline is commit
-`b06286f72f25744cd91331b3bd28918d69b5d0fd`.
-Before RC1 changes, all 385 tracked source files, four saved published downloads
-and 117 packaged runtime files matched the retained manifests. A local annotated
-checkpoint and verified Git bundle preserve that source. The UI's “Beta 5” footer
-is present in those exact Beta 6 bytes; the runtime version is `2.0.1~beta6`.
+2.0.2 continues the prepared source at commit
+`4478a568721e5a55af1f9004e294001cdd799a83`, which descends from the preserved
+Beta 6 baseline `b06286f72f25744cd91331b3bd28918d69b5d0fd`.
+It changes release identity, packaging metadata, documentation and release policy.
+The recovery engine and installation lifecycle are preserved.
 
-On November 8, 2026, the maintainer supplied the read-only verification output
-from ZORIN, obtained through ANTEC:
+Before preparation, 385 tracked Beta 6 source files, four saved published assets
+and 117 packaged runtime files matched retained manifests. On November 8, 2026,
+the maintainer supplied read-only output from ZORIN through ANTEC:
 
 ```text
 install ok installed 2.0.1~beta6
@@ -23,98 +22,103 @@ Files: 117
 Code SHA256: a347f3cefb690085a1cbf633e8d05508b8ecd083ade1b02dc8a62abf016fbb71
 ```
 
-The version, file count and aggregate SHA-256 exactly match the preserved Beta 6
-package/source fingerprint. **The installed application files are confirmed to
-match the preserved Beta 6 source.** This is maintainer-supplied read-only
-evidence; preparation did not connect to ZORIN. The deployed-source verification
-requirement is satisfied. No new RC1 hardware test is claimed.
+This exactly matches the preserved Beta 6 package/source fingerprint. The deployed
+source is confirmed; it does not need to be checked again to identify this baseline.
+No direct ZORIN connection or host change was performed during preparation.
 
-The maintainer explicitly requested publication of the already prepared candidate,
-without rebuilding or modifying its recovery engine, while retaining the incomplete
-test results below. The frozen RC1 assets remain those built from commit
-`8aedce7bd304f291961f32ae8759cfe9baeaa4dc`. This report adds evidence after that
-build; the reports embedded in those unchanged packages retain their earlier
-preparation status. All runtime files and package checksums remain unchanged.
+## Maintainer-reported hardware testing
 
-## Maintainer-reported hardware evidence
+On **November 8, 2026**, Beta 6 recovered following a host reboot and physical
+USB cable disconnection/reconnection on **Zorin OS 18.1**, an **Intel N97 mini PC**,
+with an external **Hitachi USB HDD**, **ext4**, Docker containers and dependent
+virtual images.
 
-On November 8, 2026, Beta 6 recovered after physical USB cable disconnection and
-reconnection following a host reboot: Zorin OS 18.1, Intel N97 mini PC, external
-Hitachi USB HDD, ext4, Docker containers and dependent virtual images.
+Automatic recovery succeeded on **Attempt 1** in approximately **1 minute 52 seconds**.
+The main ext4 filesystem was restored and verified, including UUID, filesystem
+type and read/write flags. The dependent virtual image was restored. Erugo, Plex,
+Immich and PhotoPrism restarted; container checks passed; application functionality
+was manually confirmed.
 
-Automatic recovery succeeded on Attempt 1 in approximately 1 minute 52 seconds.
-The main filesystem, UUID, filesystem type and read/write flags were verified;
-the dependent image was restored; Erugo, Plex, Immich and PhotoPrism restarted;
-container checks passed; and application functionality was confirmed manually.
+**Previous ZORIN tests encountered serious mount recovery difficulties.**
+The successful result does not erase those failures or guarantee future recovery.
+Earlier successful **Ubuntu Studio 26.04.1** testing used different versions and
+storage devices. Neither result is a new physical test of the exact 2.0.2 package.
 
-Previous ZORIN tests had serious mount recovery difficulties. This pass does not
-erase earlier failures. Earlier successful Ubuntu Studio 26.04.1 tests used other
-versions/devices and do not verify the exact RC1 build.
+## Checks performed for 2.0.2
 
-## RC1 automated checks
+Performed on November 8, 2026, with simulated storage, Docker and service
+boundaries and temporary private state:
 
-Completed on November 8, 2026, using temporary fixture state. Hardware, Docker,
-service and email mutations are simulated unless explicitly stated otherwise.
-
-| Check | Result and scope |
+| Fresh check | Result |
 | --- | --- |
-| Source preservation | 114 of 117 runtime files are byte-identical to Beta 6. Only settings version constants, web index rendering and HTML labels differ. Settings AST is otherwise identical. |
-| Installation behavior | Portable installer, four Debian lifecycle scripts, systemd units/timer and example configurations are byte-identical (15 files). |
-| Build/artifacts | Existing builder produces Debian/source packages, unchanged Companion 0.2.6, release notes and SHA-256 manifest. Exact source/archive and installer/payload equality verified. |
-| Version/communication | Extracted package's title/footer, authenticated Flask-to-broker status API, CLI, static assets and no-store headers verified. Application `2.0.1-rc.1`; Debian `2.0.1~rc.1`; Beta 6 < RC1 < stable ordering checked. |
-| Focused Python 3.12.16 checks | All 184 tests in ten core/standby/unmount/USB/manual-start/distribution modules passed. These include 148 carried-forward Beta 6 affected checks and 36 distribution checks. GUI fixtures use the extracted payload. |
-| Broader focused run | 238 tests ran; the older web broker fixture had 1 failure and 8 error entries, including subtests. It accesses protected host configuration instead of fully isolating that boundary. Representative failures reproduce on unchanged Beta 6. |
-| Full Python 3.14.4 suite | 1,352 tests ran: 100 errors and 24 skips. **Not a passing full suite.** See details below. |
-| Isolated lifecycle | 11 installer checks passed, covering portable and private-root Debian install/upgrade/remove/purge, preservation and maintainer-script staged-root exits. The final systemd verifier was blocked by sandbox socket permissions. |
-| Actual package upgrade/rollback | Published Beta 6 package → RC1 → retained Beta 6 in a private dpkg root passed, preserving synthetic settings, credentials, certificates, state and disabled LAN. No live service installation. |
-| Privacy | Full candidate tree and source/package scan passed; no matched credentials, personal email, private key or machine-specific secret patterns. Pinned upstream license/contact text remains. |
-| Documentation | Current Markdown rendered locally, local link targets checked, compatibility warning placement and code/table rendering checked. Upgrade/rollback shell blocks passed syntax checking. The operator block was not executed on production. |
+| Focused Python 3.12.16 suite | **194 passed**, no failures, errors or skips: 184 core/standby/unmount/USB/manual-storage/distribution checks plus 10 HTTP checks. GUI fixtures use the extracted 2.0.2 payload. |
+| Packaged identity and API | Rendered title/footer, authenticated Flask-to-broker status, CLI and all five static assets agree on 2.0.2; no-store headers retained. |
+| Recovery preservation | 114 of 117 runtime files are byte-identical to Beta 6. Only version constants and the previously prepared HTML/version rendering differ. Settings behavior AST is unchanged. The only runtime difference from the prepared candidate is version constants. |
+| Installer preservation | Portable installer, four maintainer scripts, systemd units/timer and example configurations remain byte-identical to Beta 6 (15 files). |
+| Private installer smoke checks | **11 passed**. The twelfth check, systemd unit verification, was blocked by sandbox socket permissions. This is not a fully passing installer suite. |
+| Package upgrade and rollback | Actual saved Beta 6 package → 2.0.2 → retained Beta 6 in private dpkg roots passed; synthetic configuration, state, credentials, certificates and disabled LAN preserved. No live services were operated. |
+| Build and packaging | Existing builder; all application/API/display/Debian versions are 2.0.2. Exact source/archive and installer/payload equality and SHA-256 manifest checked. Companion 0.2.6 bytes unchanged. |
+| Privacy and documentation | Full public tree plus source/package privacy scans; current Markdown rendering, local link targets, prominent warning and operator shell syntax checked. Local artifacts/caches/private data excluded. |
+| Version ordering | 2.0.2 sorts above both Beta 6 and the unissued prepared candidate. |
 
-The full-suite errors comprise 60 checks requiring an unavailable trusted Docker
-Compose plugin, 28 old recovery fixtures passing non-ISO timestamp strings, eight
-socket-based TLS/Docker checks blocked by the sandbox, and four browser-class setup
-errors (missing browser or Playwright event-loop state). The separate packaged
-Chromium attempt failed at launch with `setsockopt: Operation not permitted`.
-No new browser/verified-TLS/Companion client acceptance is claimed.
+The complete automated suite was not rerun for this version/documentation change;
+its known incomplete results are preserved below. No new unrestricted browser,
+verified-TLS or systemd acceptance is claimed. In-process HTTP checks do not
+establish network reachability or physical hardware behavior.
 
-Eight representative timestamp, Compose, old web-fixture and socket failures
-were rerun on untouched Beta 6 and reproduced (one failure, seven errors).
-This establishes those examples as inherited/environmental; it does not turn
-the complete RC1 suite green. No recovery code was changed to silence tests.
-Unrestricted systemd/browser/TLS checks and a clean, isolated full-suite result
-remain outstanding before claiming complete automated release validation.
+## Inherited automated results — incomplete
 
-GitHub connectivity was retried after receiving the ZORIN fingerprint. The CLI
-could not connect to `api.github.com`; curl failed name resolution. Read-only
-socket checks established that this execution sandbox rejects both TCP and UDP
-socket creation with `errno=1: Operation not permitted`, before DNS or GitHub
-authentication can be checked. This does not establish a fault in the maintainer's
-host DNS or GitHub credentials.
+The preceding preparation performed:
 
-The configured fetch/push remote was verified locally as
-`https://github.com/ninoleto/usb-storage-watch.git`. Live repository ownership,
-permissions, branch state and release inventory could not be verified. Publication,
-Latest designation, public downloads and final GitHub presentation remain unverified.
-Per the maintainer's instruction, publication/cleanup stopped at this network
-blocker. No release/tag was pushed or deleted. Six cached release records and 24
-saved assets remain hash-verified and backed up locally, pending fresh enumeration.
+- 184 passing focused checks across core/standby/unmount/USB/manual-storage/
+  distribution modules on Python 3.12.16.
+- Packaged title/footer, authenticated Flask-to-broker API, CLI and cache checks.
+- Eleven isolated installer checks and private-root Beta 6 upgrade/rollback.
+- Exact payload/source comparison, privacy scans, checksum and documentation checks.
 
-## Not performed and limitations
+Its full Python 3.14.4 suite ran **1,352 tests with 100 errors and 24 skips**.
+It was **not a passing full suite**. The errors comprised 60 checks requiring an
+unavailable trusted Docker Compose plugin, 28 older recovery fixtures with non-ISO
+timestamps, eight sandbox-blocked TLS/Docker socket checks and four browser setup
+errors. An expanded 238-test focused run also had one failure and eight error
+entries in older web-broker fixtures that insufficiently isolate host configuration.
 
-- No automatic production upgrade, live RC1 installation, physical disconnect,
-  USB reset, forced unmount, filesystem repair or production reboot.
-- No exact-RC1 hardware acceptance on ZORIN or Ubuntu Studio.
-- No electrical per-port power-cycle proof, broad adapter/controller/kernel
-  matrix or ARM architecture qualification.
-- No new real HDD standby/wake or live container I/O attribution acceptance.
-- No new application transfer-integrity or inbox-delivery proof.
+Eight representative failures reproduced on untouched Beta 6 (one failure, seven
+errors). This identifies those examples as inherited/environmental; it does not
+establish a completely passing application. The recovery engine was not modified
+to silence failures. These results are historical and are not presented as a new
+full 2.0.2 run. The maintainer authorized a normal release retaining these limits.
+
+See [the preserved preparation report](VALIDATION-PREPARATION-HISTORY.md) for
+details, and [Beta 6 historical validation](VALIDATION-BETA6-HISTORY.md).
+
+## Not performed and compatibility limitations
+
+- No live 2.0.2 installation, production upgrade, service restart, physical cable
+  test, USB reset, forced unmount, filesystem repair or reboot during preparation.
+- No exact-2.0.2 physical acceptance on ZORIN or Ubuntu Studio.
+- No extensive cross-distribution/kernel/controller/adapter or ARM qualification.
+- No new real HDD standby/wake, live I/O attribution or electrical power-cycle proof.
+- No new application transfer-integrity, inbox-delivery or actual Companion-host proof.
 - Historical Companion HTTP 503 remains unexplained; module 0.2.6 is unchanged.
 
-See [hardware compatibility](../README.md#hardware-compatibility-and-testing).
-Some filesystem failures need manual intervention or reboot; busy mounts can
-prevent recovery; storage verification precedes dependent Docker starts.
-Recovery does not guarantee protection against data loss.
+USB controller and adapter capabilities, filesystem errors and busy mounts can
+prevent recovery. Some failures need manual intervention or reboot. Required
+storage must be verified before Docker services restart. Software reconnect/reset
+does not prove electrical port power removal. Recovery is not guaranteed in every
+failure scenario and does not guarantee protection against data loss.
 
-[Earlier Beta 6 validation](VALIDATION-BETA6-HISTORY.md) and
-[historical reports](README.md#historical-evidence) remain available. They are
-historical evidence rather than repeated RC1 hardware testing.
+The software is provided as-is. It is developed and tested primarily on the
+maintainer's own equipment. Other Linux environments and hardware may behave
+differently; users must test recovery on their equipment before relying on it.
+See the prominent [hardware warning](../README.md#hardware-compatibility-and-testing).
+
+## Publication verification
+
+The local remote is `https://github.com/ninoleto/usb-storage-watch.git`.
+This execution sandbox currently rejects network socket creation, so live
+repository/permission/release checks and publication cannot be completed here.
+No release, Latest designation or downloaded public 2.0.2 checksum is yet verified.
+All historical releases and tags remain untouched. Six cached release records,
+24 assets and complete Git checkpoints are archived locally. A fresh live inventory
+and download verification are required before any historical-release deletion.

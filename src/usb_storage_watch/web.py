@@ -13,6 +13,7 @@ spec = importlib.util.spec_from_file_location('web_common', Path(__file__).with_
 common = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(common)
 integrations = common.module('web_integrations')
+settings = common.module('settings')
 
 READS = {'drive-activity', 'session', 'status', 'config', 'disks', 'docker', 'events', 'diagnostics', 'mount-plan', 'migration-plan', 'protection-plan', 'unmount-plan'}
 READS.update(('application-status', 'docker-overview'))
@@ -35,7 +36,7 @@ WRITES.update(('network-stage','network-confirm','network-cancel','network-certi
 
 
 def create_app(config=None, transport=common.rpc):
-    from flask import Flask, request, jsonify, send_from_directory, send_file
+    from flask import Flask, request, jsonify, send_from_directory, send_file, render_template_string
     config = common.network_config(config or json.loads(common.WEB_CONFIG.read_text()))
     static = Path(__file__).with_name('web_static')
     app = Flask(__name__, static_folder=None)
@@ -68,7 +69,8 @@ def create_app(config=None, transport=common.rpc):
 
     @app.get('/')
     def index():
-        return send_from_directory(static, 'index.html')
+        return render_template_string((static / 'index.html').read_text(),
+                                      display_version=settings.DISPLAY_VERSION)
 
     @app.get('/static/<name>')
     def asset(name):

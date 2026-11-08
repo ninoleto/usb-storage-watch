@@ -96,6 +96,9 @@ class HTTPTests(unittest.TestCase):
         self.assertEqual(response.status_code,200)
         self.assertIn("frame-ancestors 'none'", response.headers['Content-Security-Policy'])
         self.assertEqual(response.headers['Cache-Control'],'no-store')
+        self.assertIn(web.settings.DISPLAY_VERSION, response.text)
+        self.assertNotIn('{{ display_version }}', response.text)
+        self.assertNotIn('Beta 5', response.text)
         response.close()
         for asset in ('app.js','style.css','icon.svg'):
             response=self.request('/static/'+asset)

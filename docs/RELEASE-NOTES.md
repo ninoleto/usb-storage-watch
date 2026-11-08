@@ -1,125 +1,103 @@
-# USB Storage Watch 2.0.1 beta 1 — prepared, not released
+# USB Storage Watch 2.0.1 RC1
 
-Based on verified UI40. See [beta release draft](BETA-RELEASE-DRAFT.md) and [GitHub release body](BETA-GITHUB-RELEASE.md) for features,
-installation and assets, and [current validation](VALIDATION-CURRENT.md) for evidence,
-limitations and remaining acceptance. Companion remains 0.2.6.
+**Release candidate undergoing further reliability testing.**
+Application version: `2.0.1-rc.1`. Tag: `v2.0.1-rc.1`.
+Debian version: `2.0.1~rc.1`.
 
-## Historical release notes
+This promotion preserves the Beta 6 implementation at commit
+`b06286f72f25744cd91331b3bd28918d69b5d0fd`. It changes version identification,
+packaging metadata and documentation. No recovery features, configuration migration,
+dependency upgrades or recovery-engine refactoring are included.
 
-The records below describe earlier releases. Their login, activation, recovery and
-validation statements do not override the current README or validation above.
+## Hardware Compatibility and Testing
 
-# USB Storage Watch 1.1.1~rc3 — simple setup candidate
+USB Storage Watch is developed and tested primarily on hardware owned by the maintainer. Successful operation has been confirmed on the documented test systems, but compatibility with other Linux distributions, kernels, USB controllers, storage adapters and hardware configurations is not guaranteed.
 
-Setup now offers a drive list, automatic recovery, optional email and one
-**Activate protection** button. Existing valid connection settings are preferred;
-a mounted drive stays in place. Hardware recovery, Docker and optional location
-migration remain in Advanced settings. Basic recovery never requires port qualification.
+Automatic recovery depends on hardware capabilities and the operating system's ability to reset USB devices, remount filesystems and restore dependent services.
 
-A necessary narrow recovery fix permits protected desktop drive directories on
-the host's `/run` tmpfs, with safe recreation of directories removed by desktop
-cleanup. All existing disk identity, filesystem and conflicting-mount checks
-remain enforced. No repair, unmount or USB reset is introduced by setup.
+The software is provided as-is. Users should test recovery procedures on their own equipment before relying on them to protect production services or important data.
 
-**Not release-ready.** [RC3 evidence and physical acceptance](SIMPLE-SETUP-RC3-VALIDATION.md)
-distinguish automated fixture results from the still-required real Ubuntu Studio test.
-Prior recovery and physical USB results below remain historical evidence.
+Some USB controllers cannot electrically power-cycle individual ports. Software
+reset/reconnect does not establish electrical power removal. Some filesystem
+errors require manual intervention or reboot, and busy mounts can prevent safe
+recovery. Recovery does not guarantee protection against data loss. Docker
+services should restart only after their required storage is verified.
+Different Linux environments may behave differently. Universal compatibility and
+production-grade reliability are not claimed.
 
-# USB Storage Watch 1.1.1~rc2 — migration correction candidate
+### Maintainer's ZORIN test — November 8, 2026
 
-RC1 failed physical setup with an existing UUID-based entry at a desktop path.
-RC2 allows that valid entry to be kept and adds optional stable-path migration
-with private backup, interruption recovery and protected rollback. USB2/USB3
-peer diagnostics now distinguish a potential connector pair from missing proof
-or unsupported controls. Paired resetting remains unavailable in this release.
+Zorin OS 18.1; Intel N97 mini PC; external Hitachi USB hard drive; ext4; Docker
+containers and dependent virtual images. Following a host reboot, physical USB
+cable disconnection and reconnection recovered automatically on **Attempt 1** in
+approximately **1 minute 52 seconds**.
 
-**Not release-ready:** the actual Ubuntu Studio configuration workflow must pass.
-See [RC2 validation and acceptance steps](MIGRATION-RC2-VALIDATION.md) and the
-[offline peer qualification plan](USB-PEER-QUALIFICATION.md). Earlier candidate
-reports below are historical; they do not certify this workflow.
+The maintainer confirmed main ext4 restoration; UUID, filesystem type and
+read/write flags; dependent virtual-image restoration; restart of Erugo, Plex,
+Immich and PhotoPrism; passing container verification; and manual application
+functionality. This is reported **Beta 6** hardware testing. No new physical RC1
+test is claimed.
 
-# USB Storage Watch 1.1.1~rc1 — setup correction candidate
+**Previous ZORIN tests experienced serious mount recovery difficulties.**
+This successful result does not erase those failures or guarantee future recovery.
 
-This candidate corrects the physical-computer setup wizard failures. It is **not
-release-ready** until the fresh Ubuntu Studio user workflow passes. The
-[validation report](WIZARD-RC-VALIDATION.md) explains the changes, evidence,
-remaining limits and browser-only acceptance steps. USB hardware resetting,
-Docker recovery and email can all remain disabled while normal automatic
-filesystem remounting is configured and monitoring is enabled.
+Earlier versions were also tested successfully on **Ubuntu Studio 26.04.1** with
+different storage devices. That historical evidence does **not** verify the exact
+RC1 build on Ubuntu Studio.
 
-The earlier 1.1.0 recovery results below are retained as historical evidence.
-They do not establish that this candidate passes Ubuntu Studio acceptance.
+## What changed
 
-# USB Storage Watch 1.1.0
+- One authoritative version in `settings.py` supplies API/CLI identity, rendered
+  dashboard title/footer and build metadata.
+- Corrected the hard-coded “Beta 5 · TEST BUILD” footer present in Beta 6.
+  Responses already use `Cache-Control: no-store`; reload after upgrading.
+- Public version `2.0.1-rc.1`; Debian ordering uses `2.0.1~rc.1`.
+- Rewritten README, upgrade/maintenance instructions, evidence and limitations.
+  Historical tests and contributor instructions are preserved.
+- Improved exclusions for local caches, reports and build artifacts.
 
-Repeated physical reconnect validation passed, including two consecutive
-storage-plus-Docker recoveries. See the [investigation and results](RECONNECT-INVESTIGATION.md).
-
-Initial public GUI release candidate. Publication requires project-owner
-approval; no repository, tag or release has been published by this validation.
-
-USB Storage Watch monitors a removable ext4 filesystem, reports incident
-outcomes by authenticated TLS email, and optionally restores storage and
-selected Docker containers. The authenticated dashboard provides disk setup,
-email testing, recovery settings, container discovery, service controls and
-readable event history. Advanced controls remain separate.
-
-This corrected release permits normal mounting over a nonempty directory and
-ordinary ext4 journal replay after a disconnect. Underlying directory contents
-are preserved. Exact UUID/type, occupied-target, active-namespace, exclusive
-block-device, error-state and post-mount read/write checks remain enforced.
-Docker actions occur only after storage verification and at most once per
-selected container per incident. No forced mount, automatic fsck, formatting or
-destructive repair is performed.
-
-Completed outages re-arm on a confirmed new USB attachment, while service
-restarts and upgrades retain exhausted budgets. Completed Docker records from
-older selections are archived before the new incident runs. The dashboard
-separates live disk health, recovery progress, partial application recovery and
-historical outcomes.
-
-The CLI now explains and reprompts invalid disk, port, timing, yes/no and TLS
-choices. The existing dashboard design, PAM authentication, CSRF protection,
-protected SMTP storage, localhost default and explicit HTTPS LAN configuration
-are retained.
+Storage monitoring, recovery, filesystem/image verification, Docker dependencies
+and stop/start order, email, LAN/authentication, configuration persistence and UI
+controls retain the Beta 6 implementation. Companion 0.2.6 is unchanged.
 
 ## Downloads and installation
 
-- `usb-storage-watch_1.1.0_all.deb`: Debian/Ubuntu installer.
-- `usb-storage-watch-1.1.0.tar.gz`: complete source tree and portable installer.
-- `SHA256SUMS`: checksums of both artifacts.
+- `usb-storage-watch_2.0.1-rc.1_all.deb` — Debian-family installer.
+- `usb-storage-watch-2.0.1-rc.1.tar.gz` — portable source/installer and tests.
+- `usb-storage-watch-companion-0.2.6.tgz` — unchanged optional Companion module.
+- `RELEASE-NOTES.md` — these notes.
+- `SHA256SUMS` — SHA-256 checksums for all four files above.
 
-Verify the manifest in the download directory, then install:
+Download all five into one directory, then:
 
 ```sh
 sha256sum -c SHA256SUMS
-sudo apt install ./usb-storage-watch_1.1.0_all.deb
+sudo apt install ./usb-storage-watch_2.0.1-rc.1_all.deb
 ```
 
-Open `http://localhost:8765` on the installed machine and sign in with a named
-local administrator account. Monitoring and recovery require explicit setup.
-See [installation](../README.md), [GUI setup](WEB-GUI.md),
-[configuration](CONFIGURATION.md), and [validation results](FINAL-VALIDATION.md).
+Fresh installations leave drive monitoring/recovery and LAN access unconfigured.
+See the [README](https://github.com/ninoleto/usb-storage-watch/blob/v2.0.1-rc.1/README.md)
+for dependencies, initial setup and security.
+For Beta 6, follow the
+[upgrade procedure](https://github.com/ninoleto/usb-storage-watch/blob/v2.0.1-rc.1/docs/UPGRADING-RC1.md);
+retain a local Beta 6 rollback package because historical release downloads may
+be removed. Publication does not upgrade the production installation.
 
-## Supported validation scope
+## Validation and remaining limits
 
-Validated on Ubuntu 24.04 in VMware with a real approximately 29.5 GiB ext4 USB
-flash drive, rootful Docker, systemd and local authenticated TLS SMTP. The
-validation includes operator-performed physical USB disconnect/reconnect cycles,
-normal journal replay, preserved checksums and repeated Docker recovery through
-the installed service. Earlier guest storage-driver tests separately exercised
-failure, loop and timeout paths. This does not establish electrical USB reset
-compatibility. USB port resets remain disabled on the unqualified VMware
-topology. Other distributions, separate power-fault injection and external
-provider inbox delivery are not claimed tested.
+See [RC1 validation](https://github.com/ninoleto/usb-storage-watch/blob/v2.0.1-rc.1/docs/VALIDATION-CURRENT.md)
+for exact completed checks, environment blockers and tests not performed.
+The 184 focused core/standby/storage/distribution checks, packaged identity/API
+checks, 11 isolated installer checks and private-root Beta 6 upgrade/rollback
+passed. The full suite did not pass: 1,352 tests ran with 100 errors and 24 skips.
+Missing Compose/browser dependencies, sandbox socket restrictions and inherited
+fixtures are documented; representative failures also reproduce on Beta 6.
+Systemd/browser/TLS validation and deployed-source verification remain incomplete.
+Simulated recovery and isolated installer tests do not establish hardware reliability.
+No production USB reset, forced unmount, filesystem repair or automated ZORIN
+upgrade is part of this release preparation. Packages are unsigned.
 
-Retained active mounts of the returned device, filesystem errors and read-only
-storage still require operator intervention. The service does not stop
-containers to force a mount. LAN access requires an administrator-supplied
-trusted certificate. Builds are reproducible and checksummed, but unsigned.
-
-Project code is MIT licensed. The unmodified bundled Gunicorn 26.2.0 sources
-include their MIT license and a per-file integrity manifest; other dependencies
-come from the operating system. See [dependency notices](../THIRD-PARTY-NOTICES.md).
-Historical 1.0.0 and earlier unpublished 1.1.0 binaries are preserved separately
-as local baselines and are not the corrected release assets.
+Mounted HDD standby/wake behavior, live I/O attribution on individual adapters,
+external-hub electrical control, arbitrary native consumers and different
+distribution/architecture combinations still require operator validation.
+The historical Companion HTTP 503 cause remains unresolved.

@@ -1,110 +1,94 @@
-# Beta 6 candidate validation
+# USB Storage Watch 2.0.1 RC1 — validation
 
-Candidate `2.0.1~beta6` extends published Beta 5 with guarded mounted standby and
-passive per-container I/O diagnostics. No release publication or host installation
-is part of preparation. Prior validation below is historical evidence, not repeated
-physical acceptance of this change.
+RC1 is a release candidate undergoing further reliability testing.
+This report distinguishes source/package checks, isolated simulations and hardware
+observations. Final publication requires deployed-source identification and
+successful GitHub verification; neither is inferred from a build.
 
-Focused tests use temporary kernel/cgroup fixtures and simulated Docker, mounts,
-power and flush operations. They cover idle running consumers/open files, continuing
-reads/writes/discards/flushes and pending requests, image order and activity, changed
-identities/mounts, swap and incomplete counters, missing/shared cgroup metrics,
-no double counting and invalidation of confirmed sleep after subsequent I/O.
-Affected unmount, recovery cleanup, USB identity and manual app-start guards pass.
+## Source provenance
 
-Chromium checks run the packaged UI and authenticated broker at 320/768/1440 px.
-Companion production 0.2.6 client/controller checks use localhost verified HTTPS,
-management-token/session/CSRF authentication and the same guarded standby path.
-Worker launching/storage/Docker/power are simulated; the locks and backend are real.
-These are client integration tests, not actual Companion host/Stream Deck tests.
-No physical drive was put to sleep and no production service/container was operated.
+The frozen Beta 6 baseline is commit
+`b06286f72f25744cd91331b3bd28918d69b5d0fd`.
+Before RC1 changes, all 385 tracked source files, four saved published downloads
+and 117 packaged runtime files matched the retained manifests. A local annotated
+checkpoint and verified Git bundle preserve that source. The UI's “Beta 5” footer
+is present in those exact Beta 6 bytes; the runtime version is `2.0.1~beta6`.
 
-Private-root fresh/upgrade, package/payload/version/privacy and unchanged Companion
-checks are recorded with the candidate. See [HDD standby](HDD-STANDBY.md) for hardware
-acceptance steps. Adapter standby confirmation, normal wake/access with running
-apps, automatic physical standby and target-host compatibility remain unverified.
-The old optional Companion review-only description still says “busy users”; the
-supported one-press controls use the corrected backend and return its actual reason.
-Companion 0.2.6 bytes are preserved; no button replacement is needed for this backend
-change. The legacy review wording can be updated in a separate module release.
+The maintainer reports the installed Beta 6 hardware result below. An independent
+fingerprint of the installed ZORIN code is still pending; preparation has not
+connected to ZORIN. Publication and historical-release deletion remain gated on
+that match. No new RC1 hardware test is claimed.
 
-## Previous Beta 5 evidence
+## Maintainer-reported hardware evidence
 
-# Current validation and limits
+On November 8, 2026, Beta 6 recovered after physical USB cable disconnection and
+reconnection following a host reboot: Zorin OS 18.1, Intel N97 mini PC, external
+Hitachi USB HDD, ext4, Docker containers and dependent virtual images.
 
-Beta **2.0.1~beta5**, prepared tag **v2.0.1-beta.5**, completes reviewed access changes
-for eligible Compose project directories and configuration files. It separately
-corrects Portainer product-label ownership classification. Green saved-state badges,
-Companion **0.2.6**, network behavior and automatic recovery are unchanged.
+Automatic recovery succeeded on Attempt 1 in approximately 1 minute 52 seconds.
+The main filesystem, UUID, filesystem type and read/write flags were verified;
+the dependent image was restored; Erugo, Plex, Immich and PhotoPrism restarted;
+container checks passed; and application functionality was confirmed manually.
 
-Focused checks cover a PhotoPrism-like project directory and Compose file writable
-by a shared group containing a synthetic `plex` account, while writable application
-data remains in a child directory. Immich-like project/environment/setgid modes,
-only-necessary write removal, stale confirmations, app locks, other-app data mounts,
-missing inventory, partial restoration/uncertainty and normal settings save are
-covered. Docker/services/account lookup are simulated; temporary Unix permissions,
-descriptor operations and Compose rendering are real. A separate root-only kernel
-fixture drops a child process to disposable numeric credentials: project entry writes
-are removed while child-data creation/rename/read/write continue. No host accounts,
-production permissions, real apps, disks or services are operated.
+Previous ZORIN tests had serious mount recovery difficulties. This pass does not
+erase earlier failures. Earlier successful Ubuntu Studio 26.04.1 tests used other
+versions/devices and do not verify the exact RC1 build.
 
-Chromium at **320/768/1440 px** uses real localhost HTTP/session/broker handlers to
-confirm the combined access plan, stale refusal, retained drafts/child permissions,
-normal explicit save and green collapsed badges. Python **3.12.16**, Flask **3.0.2**
-and private PyYAML **6.0.3** cover compatibility; not the target's exact dependency set.
-Exact payload/source/module/checksum/privacy and private-root fresh/upgrade checks
-are part of packaging, not a live distribution installation or target-host test.
+## RC1 automated checks
 
-Source inspection distinguishes Portainer's documented product and external
-access-control labels from management evidence. Compose-deployed server/agent
-fixtures pass normal source verification. Explicit management markers stay refused;
-unknown namespace hints or manager-private paths stay unverified. No live Portainer
-control database/API was queried; absence of an external controller is not proven.
-See [Docker setup](DOCKER-SETUP.md) for source references and exact limitations.
+Completed on November 8, 2026, using temporary fixture state. Hardware, Docker,
+service and email mutations are simulated unless explicitly stated otherwise.
 
-Remaining GUI stops: unsafe ancestors outside the project, ACLs/links/ownership,
-account-home/mount/shared-storage roots, direct app-data use, unavailable inventory
-or memberships, missing/non-directory child data sources, and unsupported/ambiguous
-Compose sources or external management. Native services are not fully inventoried;
-the confirmation explains lost directory-entry writes rather than claiming safety
-for native media/FTP consumers. The supplied target-host screenshot did not establish
-numeric modes; only fixture modes are stated. Target acceptance is pending.
-
-Earlier Beta 3 disposable loop-mount/SMTP TLS and Beta 2 verified HTTPS/rollback
-checks are carried forward. No new physical storage/reboot or TLS test is claimed.
-
-| Evidence | Scope |
+| Check | Result and scope |
 | --- | --- |
-| UI36 physical tests | Five-minute drive-return timeout/failure email, late return/recovery email, connected-storage reboot; storage ready before app starts and no repeated startup |
-| UI39 simulations/browser/HTTPS | Backend manual Start/Restart storage refusal, wrong/missing storage/images, monitoring off, retained stops and dashboard/Companion response handling |
-| UI40 simulated lifecycle tests | Normal/canceled/fallback upgrade, old payload installed, repeated preparation, surviving workers, disabled LAN and existing-image CLI registration |
-| UI40 installed Ubuntu host | Actual canceled old hook followed by corrected fallback; old web/broker processes and workers replaced; authenticated localhost/verified HTTPS; settings, mounts, receipts and container start times preserved |
-| UI40 manual acceptance, operator-reported | Safe unmount stopped dependent apps; dashboard disabled starts and Companion refused without sending a command; remount left apps stopped; explicit starts succeeded and existing files were visible; Immich briefly showed Starting before Running |
-| Companion 0.2.6 | Prior actual Companion HTTPS tests with simulated storage/Docker; unchanged module in this beta |
+| Source preservation | 114 of 117 runtime files are byte-identical to Beta 6. Only settings version constants, web index rendering and HTML labels differ. Settings AST is otherwise identical. |
+| Installation behavior | Portable installer, four Debian lifecycle scripts, systemd units/timer and example configurations are byte-identical (15 files). |
+| Build/artifacts | Existing builder produces Debian/source packages, unchanged Companion 0.2.6, release notes and SHA-256 manifest. Exact source/archive and installer/payload equality verified. |
+| Version/communication | Extracted package's title/footer, authenticated Flask-to-broker status API, CLI, static assets and no-store headers verified. Application `2.0.1-rc.1`; Debian `2.0.1~rc.1`; Beta 6 < RC1 < stable ordering checked. |
+| Focused Python 3.12.16 checks | All 184 tests in ten core/standby/unmount/USB/manual-start/distribution modules passed. These include 148 carried-forward Beta 6 affected checks and 36 distribution checks. GUI fixtures use the extracted payload. |
+| Broader focused run | 238 tests ran; the older web broker fixture had 1 failure and 8 error entries, including subtests. It accesses protected host configuration instead of fully isolating that boundary. Representative failures reproduce on unchanged Beta 6. |
+| Full Python 3.14.4 suite | 1,352 tests ran: 100 errors and 24 skips. **Not a passing full suite.** See details below. |
+| Isolated lifecycle | 11 installer checks passed, covering portable and private-root Debian install/upgrade/remove/purge, preservation and maintainer-script staged-root exits. The final systemd verifier was blocked by sandbox socket permissions. |
+| Actual package upgrade/rollback | Published Beta 6 package → RC1 → retained Beta 6 in a private dpkg root passed, preserving synthetic settings, credentials, certificates, state and disabled LAN. No live service installation. |
+| Privacy | Full candidate tree and source/package scan passed; no matched credentials, personal email, private key or machine-specific secret patterns. Pinned upstream license/contact text remains. |
+| Documentation | Current Markdown rendered locally, local link targets checked, compatibility warning placement and code/table rendering checked. Upgrade/rollback shell blocks passed syntax checking. The operator block was not executed on production. |
 
-The manual acceptance above is user-reported, not an independently captured trace of
-each command. Because clients blocked starts before execution, it does not prove a
-physical backend-refusal attempt; that guard has separate simulated/HTTPS coverage.
-Do not repeat the completed physical timeout, reboot or manual cycle for packaging.
+The full-suite errors comprise 60 checks requiring an unavailable trusted Docker
+Compose plugin, 28 old recovery fixtures passing non-ISO timestamp strings, eight
+socket-based TLS/Docker checks blocked by the sandbox, and four browser-class setup
+errors (missing browser or Playwright event-loop state). The separate packaged
+Chromium attempt failed at launch with `setsockopt: Operation not permitted`.
+No new browser/verified-TLS/Companion client acceptance is claimed.
 
-Erugo authenticated upload/download on Ubuntu is deliberately deferred to target-host
-acceptance. Visible files and Running status do not establish transfer integrity.
-Immich's observed normal startup does not establish arbitrary delayed database/cache
-readiness. Direct Docker starts do not execute Compose dependency ordering.
+Eight representative timestamp, Compose, old web-fixture and socket failures
+were rerun on untouched Beta 6 and reproduced (one failure, seven errors).
+This establishes those examples as inherited/environmental; it does not turn
+the complete RC1 suite green. No recovery code was changed to silence tests.
+Unrestricted systemd/browser/TLS checks and a clean, isolated full-suite result
+remain outstanding before claiming complete automated release validation.
 
-Exact beta package checks and checksums are recorded with the release artifacts.
-No live installation of this beta or Zorin deployment is claimed; installed UI40
-evidence is carried forward separately. Installer tests use isolated roots and
-simulated service processes, not a fresh booted distribution test.
+GitHub CLI access in this preparation environment failed DNS resolution for
+`api.github.com`. The live release inventory, publication, Latest designation,
+public downloads and final GitHub presentation have not been verified. All
+historical releases/tags remain untouched. Six cached release records and 24
+saved assets were hash-verified and backed up locally, pending fresh enumeration.
 
-Remaining deployment requirements: one recovery owner; reviewed existing watcher
-shutdown/USB cleanup; correct filesystem/image identity; native media-server, FTP
-and backup-job coordination; authoritative Compose/runtime policy agreement; and
-direct-start application dependency readiness. USW's optional systemd-service
-restarts after recovery do not provide pre-unmount shutdown or boot storage gating.
+## Not performed and limitations
 
-The historical Companion HTTP 503 cause remains unidentified. Its existence does
-not by itself establish a core recovery failure. Status freshness is independent
-and confirmed command results are retained; no universal transport guarantee is
-claimed. USB capabilities vary; software reconnect is not proof of electrical power
-loss. Packages are unsigned; checksums verify integrity, not publisher identity.
+- No automatic production upgrade, live RC1 installation, physical disconnect,
+  USB reset, forced unmount, filesystem repair or production reboot.
+- No exact-RC1 hardware acceptance on ZORIN or Ubuntu Studio.
+- No electrical per-port power-cycle proof, broad adapter/controller/kernel
+  matrix or ARM architecture qualification.
+- No new real HDD standby/wake or live container I/O attribution acceptance.
+- No new application transfer-integrity or inbox-delivery proof.
+- Historical Companion HTTP 503 remains unexplained; module 0.2.6 is unchanged.
+
+See [hardware compatibility](../README.md#hardware-compatibility-and-testing).
+Some filesystem failures need manual intervention or reboot; busy mounts can
+prevent recovery; storage verification precedes dependent Docker starts.
+Recovery does not guarantee protection against data loss.
+
+[Earlier Beta 6 validation](VALIDATION-BETA6-HISTORY.md) and
+[historical reports](README.md#historical-evidence) remain available. They are
+historical evidence rather than repeated RC1 hardware testing.

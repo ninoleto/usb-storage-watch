@@ -1,132 +1,81 @@
 # Maintenance and troubleshooting
 
-## Turn off automatic actions, keep email
+Use the [current README](../README.md) and
+[Beta 6 → RC1 upgrade procedure](UPGRADING-RC1.md) for exact package names,
+private backups and service preparation.
 
-Wait for any active incident to finish. Stop **this package's** service, edit the
-configuration, then validate and start it:
+## Configuration and monitoring
 
-```sh
-sudo systemctl stop usb-storage-watch.service
-sudoedit /etc/usb-storage-watch/config.json
-sudo usb-storage-watch validate
-sudo systemctl start usb-storage-watch.service
-```
+Each drive has independent settings and a systemd monitoring instance. The
+original profile uses `usb-storage-watch.service`; additional profiles use
+`usb-storage-watch@PROFILE_ID.service`. Prefer the dashboard's drive controls
+and reviewed settings. Monitoring, automatic recovery, notifications, boot
+startup and app recovery are separate options.
 
-Set `recovery.mount`, `usb.enabled` and `docker.enabled` to `false`. Keep
-`notifications.enabled` true and keep SMTP settings. Keep disk identity,
-incident history and USB ledger intact. The wizard also defaults every action
-off, but cannot run while an incident/USB cleanup is unfinished. Never delete
-incident state to get another reset or restart budget.
+Wait for active operations to finish before maintenance. Do not delete incident
+receipts, reset budgets, pending port-enable evidence or email queues.
+Stopping a monitor preserves its incident state. Existing cleanup obligations
+must be reconciled by the installed helpers.
 
-## Upgrade
+The application version is `2.0.1-rc.1`; Debian metadata uses `2.0.1~rc.1`.
+Configuration and incident schema versions are independent of release identity.
+RC1 changes no schema, configuration default or recovery policy.
 
-Securely back up `/etc/usb-storage-watch/` and `/var/lib/usb-storage-watch/` before
-maintenance. They contain credentials, hardware identities and the queue. Avoid
-upgrades during an outage. Use the same installation method:
+## Upgrade and recovery from installation errors
 
-```sh
-sudo apt install ./usb-storage-watch_NEW_VERSION_all.deb
-# Or, from the newly extracted portable source:
-sudo python3 tools/install.py
-```
+The existing maintenance helpers and package hooks stop and verify USW workers,
+web listeners/supervisors and broker before replacement. Active monitoring and
+intended web/LAN enablement are restored afterward. Disabled LAN stays disabled.
+Unresolved USB enable cleanup or surviving workers can block replacement/removal.
 
-The monitor and this package’s two GUI services are stopped for replacement. Its stop hook attempts any pending
-port re-enable. Unresolved cleanup blocks replacement/removal so helpers are
-retained. If the service was active before upgrade, it is started again afterward;
-an inactive service remains inactive. Configuration, SMTP credentials, queue and
-history are not overwritten. Portable upgrades save prior program files under
-`/var/lib/usb-storage-watch/backups/`. A failed copy leaves the service stopped;
-fix the installation before starting it. dpkg manages package rollback/error
-recovery. Read the changelog and preserve the old package for rollback; do not
-downgrade across an incompatible state schema without reviewing its migration.
-
-After upgrade:
-
-```sh
-sudo usb-storage-watch --version
-sudo usb-storage-watch validate
-sudo usb-storage-watch diagnose
-systemctl is-active usb-storage-watch.service
-sudo usb-storage-watch status
-```
-
-The source version, schema version and runtime incident version have different
-purposes. Current package version is 1.1.0; config schema is 1; state schema is 2.
+Keep a verified old installer plus private configuration, state, certificates
+and code backups. Do not overwrite current state with old receipts after a package
+rollback. A failed installation may leave services stopped; inspect the error
+and repair the package installation before resuming normal operation.
 
 ## Remove
 
-For a Debian installation:
+Use one command matching your installation method:
 
 ```sh
 sudo apt remove usb-storage-watch
-```
-
-For a portable installation, retain/extract its archive and run:
-
-```sh
+# Or, from the matching portable archive:
 sudo python3 tools/install.py --uninstall
 ```
 
-Removal stops/disables this package’s monitor and GUI services and removes their code/units. It never
-unmounts data, touches Docker, edits fstab or removes your data. Configuration,
-SMTP credentials, history and queued mail remain. This package deliberately
-retains generated configuration/state even with `apt purge`, so a mistaken purge
-cannot erase a pending safety record. Reinstalling resumes that retained state;
-it does not automatically start a previously removed monitor. A previously enabled
-GUI returns on reinstall; an explicitly disabled GUI remains disabled.
+Removal stops/disables USW services and removes its program files. It does not
+unmount data, operate Docker, edit fstab or delete images/application data.
+Generated configuration, SMTP credentials, history and queued mail remain, even
+after Debian purge. Unresolved port-enable obligations can prevent removal.
 
-For complete erasure, first verify the service is removed, no USB enable is
-pending, and no queued email/history needs preserving. Archive the two private
-directories and `/etc/usb-storage-watch-web/` if needed, then remove those directories manually. No automatic
-purge utility deletes safety records. Do not remove the watched filesystem or
-application data. A pending USB re-enable must be resolved while the installed
-helpers are still available.
-
-## Change the watched disk
-
-One installation monitors one filesystem. Stop this service cleanly, resolve any
-pending port enable, finish the incident, and securely archive the old config,
-state and queue together. Only then initialize a new configuration/state for the
-new disk. A saved UUID/mountpoint mismatch is intentionally rejected. Do not run
-two copies against the same disk and do not point this package at an existing
-monitor's state directory.
+Before manually deleting private state, verify removal completed, no USB enable
+obligation remains, and required history/queued mail have been archived.
+Private paths include `/etc/usb-storage-watch`, `/etc/usb-storage-watch-web`
+and `/var/lib/usb-storage-watch`. Do not delete the watched filesystem.
 
 ## Troubleshooting
 
-| Symptom | What to check |
+| Symptom | Checks |
 | --- | --- |
-| Service skipped / inactive after install | Installation does not activate it. Complete setup, validation and email test; then explicitly enable/start. |
-| Invalid/unreadable config | Use `sudo usb-storage-watch validate`. JSON fields are strict; directory root:0700 and files root:0600. Do not paste secrets into logs. |
-| State must be on internal root | `/var/lib/usb-storage-watch` must be on the writable root filesystem. Separate `/var` is currently unsupported. |
-| Mount present but reported unhealthy | Correct UUID and ext4? Whole filesystem root? Both rw flags? `errors_count=0`? No stacked mounts? Run `diagnose` and review the journal. |
-| Normal mount skipped | Explicit opt-in, exact fstab UUID/options, empty safe mountpoint, clean superblock/journal and no active use are all required. Read the recorded reason. |
-| Unclean/aborted journal or filesystem errors | Stop automatic attempts and involve an administrator. Repairs are never automatic; do not override the guard with a force mount. |
-| USB skipped | Read qualification/binding/isolation reason. Present device, stale Docker namespace, open handles, peer/hub or changed hardware intentionally prevents reset. |
-| USB re-enable failed | Keep helpers/ledger installed. Further recovery is blocked. Review hardware/port identity and kernel logs; seek manual assistance. Software cannot fix missing power or a hung controller. |
-| Application untouched | Was it running before the outage? Exact saved ID/bind? Is storage currently proven healthy? Unknown/stopped/paused containers are preserved. |
-| Application verification failed | Check healthcheck, bind destination, rprivate/rw, source inode, access permissions and required shell/timeout/find tools. No automatic repeated restart. |
-| SMTP failure | Check provider host/port/TLS mode, app password, account restrictions, network and CA certificates. Errors are sanitized. Test inbox delivery explicitly. |
-| Queue retry after uncertain SMTP response | Normal ambiguity: event IDs are stable, but accepted messages can be delivered twice. |
-| No second email after failed incident later returns | One final event per incident; later healthy verification re-arms the next independent outage. Review the journal for late restoration. |
-| Pending incident after restart | Intent was persisted deliberately. Do not delete it; allow bounded verification/finalization. |
-
-Useful commands:
+| Unconfigured/inactive monitor | Complete setup and explicitly start monitoring for that drive. |
+| Invalid configuration | Run `sudo usb-storage-watch validate`; do not publish credential files. |
+| State directory refused | Persistent state must be on the writable internal root filesystem. Separate `/var` is unsupported. |
+| Unhealthy mount | Review UUID, ext4 type, rw flags, stacked mounts, filesystem errors and the recorded reason. |
+| Recovery refused | Busy mounts, unknown users, changed identities and uncertain receipts remain blockers. Normal journal replay differs from filesystem repair. |
+| Container not restarted | Review selected prerequisites, pinned identity, deliberate stops and healthchecks. Direct starts do not perform Compose dependency ordering. |
+| USB re-enable failed | Keep helpers and ledger installed; inspect port identity and kernel logs. Manual intervention or reboot may be needed. |
+| SMTP failure | Review host/port/TLS, CA trust, provider restrictions and spam. Acceptance is not inbox delivery. |
+| Timeout followed by late return | The incident's timeout and later recovery may have separate notifications; retained evidence prevents renewed reset budgets. |
+| Old dashboard label | Beta 6 hard-coded Beta 5. Verify RC1 package/CLI, running web service and browser reload; responses use no-store. |
 
 ```sh
-sudo journalctl -u usb-storage-watch.service --since today --no-pager
+usb-storage-watch --version
 sudo usb-storage-watch diagnose
 sudo usb-storage-watch status
 sudo usb-storage-watch verify-apps
+systemctl --no-pager --full list-units --all 'usb-storage-watch*.service'
 ```
 
-Runtime state and diagnostics contain private filesystem/hardware/container
-information. Redact those before reporting a bug. Never include `smtp.json`, its
-backup, provider credentials, complete container environment, or private USB
-qualification evidence in a public report.
-
-## Web service maintenance
-
-See [WEB-GUI.md](WEB-GUI.md) for authentication, session revocation, headless
-installation and TLS recovery. Back up `/etc/usb-storage-watch-web/` privately
-when LAN TLS is configured: it contains a private key. The presentation history
-is `/var/lib/usb-storage-watch/web-history.sqlite3`; it never controls recovery.
+Diagnostics may contain private disk/container identities. Redact before sharing.
+Never publish SMTP settings, tokens, private keys or full Docker environment values.
+See [web maintenance](WEB-GUI.md) for authentication and certificate handling.

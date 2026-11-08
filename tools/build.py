@@ -15,10 +15,10 @@ import gzip
 import json
 
 ROOT=Path(__file__).resolve().parents[1]
-VERSION='2.0.1~beta6'
-# GitHub normalizes '~' in asset names. Keep Debian version ordering internally,
-# but create portable public names and checksums before upload.
-ASSET_VERSION=VERSION.replace('~','-')
+spec=importlib.util.spec_from_file_location('release_settings',ROOT/'src/usb_storage_watch/settings.py')
+release=importlib.util.module_from_spec(spec);spec.loader.exec_module(release)
+VERSION=release.PACKAGE_VERSION
+ASSET_VERSION=release.VERSION
 EPOCH=1767225600
 spec=importlib.util.spec_from_file_location('installer',ROOT/'tools/install.py')
 installer=importlib.util.module_from_spec(spec);spec.loader.exec_module(installer)
@@ -26,6 +26,9 @@ installer=importlib.util.module_from_spec(spec);spec.loader.exec_module(installe
 
 def maintainer_script(name):
     text=(ROOT/'packaging'/name).read_text()
+    if name=='control':
+        if text.count('@VERSION@')!=1: raise ValueError('Missing package version marker')
+        text=text.replace('@VERSION@',VERSION)
     if name=='prerm':
         if text.count('@WEB_LIFECYCLE@')!=1: raise ValueError('Missing lifecycle embedding marker')
         text=text.replace('@WEB_LIFECYCLE@',(ROOT/'src/usb_storage_watch/web_lifecycle.py').read_text())
@@ -34,7 +37,7 @@ def maintainer_script(name):
 
 def source_files():
     roots=('src','tools','tests','docs','examples','packaging')
-    for name in ('README.md','LICENSE','THIRD-PARTY-NOTICES.md','CHANGELOG.md','.gitignore','Makefile'):
+    for name in ('README.md','AGENTS.md','LICENSE','THIRD-PARTY-NOTICES.md','CHANGELOG.md','.gitignore','Makefile'):
         yield ROOT/name
     for name in roots:
         for p in sorted((ROOT/name).rglob('*')):
@@ -90,7 +93,9 @@ def main():
     content=(companion/'module.tgz').read_bytes()
     if hashlib.sha256(content).hexdigest()!=metadata['sha256']:raise ValueError('Bundled Companion checksum mismatch')
     module.write_bytes(content)
-    artifacts=[dist/f'usb-storage-watch_{ASSET_VERSION}_all.deb',archive,module]
+    notes=dist/'RELEASE-NOTES.md'
+    notes.write_bytes((ROOT/'docs/RELEASE-NOTES.md').read_bytes())
+    artifacts=[dist/f'usb-storage-watch_{ASSET_VERSION}_all.deb',archive,module,notes]
     (dist/'SHA256SUMS').write_text(''.join(hashlib.sha256(p.read_bytes()).hexdigest()+'  '+p.name+'\n' for p in artifacts))
     print('Built Debian/source packages and copied verified Companion module; SHA256SUMS matches public filenames.')
 

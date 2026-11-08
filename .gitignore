@@ -41,3 +41,15 @@ validation-private/
 *.deb
 *.tar.gz
 *.zip
+*.tgz
+!src/usb_storage_watch/companion/module.tgz
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+test-results/
+playwright-report/
+*.egg-info/
+*.swp
+*~

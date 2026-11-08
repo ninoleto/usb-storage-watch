@@ -10,7 +10,10 @@ import re
 import stat
 import uuid
 
-VERSION = '2.0.1~beta6'
+VERSION = '2.0.1-rc.1'
+DISPLAY_VERSION = 'USB Storage Watch ' + VERSION.replace('-rc.', ' RC')
+# Debian's tilde keeps release candidates below the eventual stable version.
+PACKAGE_VERSION = VERSION.replace('-rc.', '~rc.')
 # Each process/module has an immutable drive context. No process-wide selection
 # is changed by dashboard requests. The original profile keeps all DEV7 paths.
 PROFILE = globals().get('PROFILE') or {'id': os.environ.get('USB_STORAGE_WATCH_DRIVE', 'legacy')}

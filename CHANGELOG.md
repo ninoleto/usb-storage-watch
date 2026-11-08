@@ -1,3 +1,9 @@
+## 2.0.1 RC1
+
+Promote the Beta 6 implementation without recovery behavior changes. Centralize
+release identity, correct the stale Beta 5 dashboard label, update packaging and
+documentation, and record hardware evidence and compatibility limitations.
+
 ## 2.0.1 Beta 6 candidate
 
 - Mounted HDD standby uses flushed I/O evidence instead of idle consumer handles.
